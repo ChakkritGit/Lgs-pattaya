@@ -8,10 +8,8 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +24,8 @@ import com.thanesgroup.lgs.data.viewModel.AuthViewModel
 import com.thanesgroup.lgs.screen.auth.LoginScreen
 import com.thanesgroup.lgs.screen.auth.LoginWithCodeScreen
 import com.thanesgroup.lgs.screen.main.MainScreen
+import com.thanesgroup.lgs.screen.splashScreen.SplashScreen
+import kotlinx.coroutines.delay
 
 @Composable
 fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController, context: Context) {
@@ -64,28 +64,31 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
     )
   }
 
-  val startDestination = if (authState.isAuthenticated) {
-    Routes.Main.route
-  } else {
-    Routes.Login.route
-  }
-
-  if (authState.isLoading) {
-    Column(modifier = Modifier.padding(innerPadding)) {
-      Text(text = "Splash screen!")
-    }
-    return
-  }
-
   NavHost(
     navController = navController,
-    startDestination = startDestination,
+    startDestination = Routes.Splash.route,
     enterTransition = transitionSpec,
     exitTransition = exitSpec,
     popEnterTransition = popEnterSpec,
     popExitTransition = popExitSpec,
     modifier = Modifier.padding(innerPadding)
   ) {
+    composable(route = Routes.Splash.route) {
+      SplashScreen()
+      LaunchedEffect(authState) {
+        if (!authState.isLoading) {
+          delay(1500L)
+
+          val destination = if (authState.isAuthenticated) Routes.Main.route else Routes.Login.route
+          navController.navigate(destination) {
+            popUpTo(Routes.Splash.route) {
+              inclusive = true
+            }
+          }
+        }
+      }
+    }
+
     composable(route = Routes.Login.route) {
       LoginScreen(
         navController = navController,

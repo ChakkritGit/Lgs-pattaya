@@ -1,7 +1,6 @@
 package com.thanesgroup.lgs.screen.auth
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -115,9 +114,10 @@ fun LoginWithCodeScreen(
       }
     },
     containerColor = Color.Transparent
-  ) { innerPadding ->
+  ) { _ ->
     Box(
       modifier = Modifier
+//        .padding(innerPadding)
         .fillMaxSize()
         .drawWithCache {
           val topRightPath = Path().apply {

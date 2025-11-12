@@ -56,6 +56,7 @@ dependencies {
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.accompanist.navigation.animation)
   implementation(libs.compose)
+  implementation("androidx.core:core-splashscreen:1.2.0")
 
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)

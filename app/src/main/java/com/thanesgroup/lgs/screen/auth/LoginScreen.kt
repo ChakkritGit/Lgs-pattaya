@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,6 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,10 +35,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -65,6 +71,9 @@ fun LoginScreen(
   var userpassword by rememberSaveable { mutableStateOf("") }
   var errorMessage by remember { mutableStateOf("") }
   var isLoading by remember { mutableStateOf(false) }
+
+  val focusRequesterPassword = remember { FocusRequester() }
+  val keyboardController = LocalSoftwareKeyboardController.current
 
   val hideKeyboard = Keyboard.hideKeyboard()
 
@@ -153,7 +162,7 @@ fun LoginScreen(
         text = "LGS",
         fontSize = 42.sp,
         fontWeight = FontWeight.Bold,
-        color = Color.Blue
+        color = LgsBlue
       )
 
       HorizontalDivider(
@@ -180,7 +189,7 @@ fun LoginScreen(
         value = username,
         onValueChange = { username = it },
         modifier = Modifier.fillMaxWidth(),
-        label = { Text("Username") },
+        label = { Text("ชื่อผู้ใช้") },
         leadingIcon = {
           Icon(
             painter = painterResource(R.drawable.account_circle_24px),
@@ -188,15 +197,29 @@ fun LoginScreen(
           )
         },
         singleLine = true,
-        shape = RoundedCornerShape(12.dp)
+        colors = OutlinedTextFieldDefaults.colors(
+          focusedBorderColor = LgsBlue,
+          focusedLabelColor = LgsBlue,
+          focusedLeadingIconColor = LgsBlue
+        ),
+        keyboardActions = KeyboardActions(
+          onNext = {
+            focusRequesterPassword.requestFocus()
+          }),
+        keyboardOptions = KeyboardOptions.Default.copy(
+          imeAction = ImeAction.Next
+        ),
+        shape = RoundedCornerShape(100.dp)
       )
       Spacer(modifier = Modifier.height(16.dp))
 
       OutlinedTextField(
         value = userpassword,
         onValueChange = { userpassword = it },
-        modifier = Modifier.fillMaxWidth(),
-        label = { Text("Password") },
+        modifier = Modifier
+          .fillMaxWidth()
+          .focusRequester(focusRequesterPassword),
+        label = { Text("รหัสผ่าน") },
         leadingIcon = {
           Icon(
             painter = painterResource(R.drawable.password_24px),
@@ -204,9 +227,23 @@ fun LoginScreen(
           )
         },
         singleLine = true,
-        shape = RoundedCornerShape(12.dp),
-        visualTransformation = PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+        colors = OutlinedTextFieldDefaults.colors(
+          focusedBorderColor = LgsBlue,
+          focusedLabelColor = LgsBlue,
+          focusedLeadingIconColor = LgsBlue
+        ),
+        keyboardActions = KeyboardActions(
+          onDone = {
+            keyboardController?.hide()
+            handleLogin()
+          }),
+        keyboardOptions = KeyboardOptions(
+          keyboardType = KeyboardType.Password,
+          imeAction = ImeAction.Done
+        ),
+        shape = RoundedCornerShape(100.dp),
+        visualTransformation = PasswordVisualTransformation()
+
       )
       Spacer(modifier = Modifier.height(32.dp))
 
@@ -218,12 +255,12 @@ fun LoginScreen(
         modifier = Modifier
           .fillMaxWidth()
           .height(50.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(100.dp),
         colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
         enabled = !isLoading
       ) {
         if (!isLoading) {
-          Text(text = "Log In", fontSize = 18.sp)
+          Text(text = "เข้าสู่ระบบ", fontSize = 18.sp)
         } else {
           CircularProgressIndicator(
             modifier = Modifier.size(24.dp),
@@ -241,11 +278,11 @@ fun LoginScreen(
         modifier = Modifier
           .fillMaxWidth()
           .height(50.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(100.dp),
         border = BorderStroke(1.dp, Color.LightGray)
       ) {
         Text(
-          text = "Login with your card",
+          text = "เข้าสู่ระบบด้วย QrCode",
           fontSize = 18.sp,
           color = LgsBlue
         )
