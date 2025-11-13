@@ -139,7 +139,7 @@ fun LoginScreen(
           close()
         }
         val bottomLeftPath = Path().apply {
-          moveTo(0f, size.height * 0.93f)
+          moveTo(0f, size.height * 0.90f)
           lineTo(0f, size.height)
           lineTo(size.width * 0.25f, size.height)
           close()
@@ -174,12 +174,11 @@ fun LoginScreen(
       Text(
         text = "ลงชื่อเข้าใช้งาน",
         fontSize = 28.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.Black
+        fontWeight = FontWeight.Bold
       )
       Spacer(modifier = Modifier.height(4.dp))
       Text(
-        text = "LGS System",
+        text = "Light Guiding Station System",
         fontSize = 18.sp,
         color = Color.Gray
       )
@@ -260,7 +259,7 @@ fun LoginScreen(
         enabled = !isLoading
       ) {
         if (!isLoading) {
-          Text(text = "เข้าสู่ระบบ", fontSize = 18.sp)
+          Text(text = "เข้าสู่ระบบ", fontSize = 18.sp, fontWeight = FontWeight.Normal)
         } else {
           CircularProgressIndicator(
             modifier = Modifier.size(24.dp),
@@ -284,7 +283,8 @@ fun LoginScreen(
         Text(
           text = "เข้าสู่ระบบด้วย QrCode",
           fontSize = 18.sp,
-          color = LgsBlue
+          color = LgsBlue,
+          fontWeight = FontWeight.Normal
         )
       }
     }

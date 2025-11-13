@@ -2,6 +2,8 @@ package com.thanesgroup.lgs.screen.auth
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,10 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +29,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
@@ -39,7 +44,7 @@ import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
 import com.thanesgroup.lgs.data.viewModel.TokenHolder
 import com.thanesgroup.lgs.navigation.Routes
-import com.thanesgroup.lgs.ui.component.BarcodeInputField
+import com.thanesgroup.lgs.ui.component.BarcodeScanner
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 import com.thanesgroup.lgs.util.parseErrorMessage
 import com.thanesgroup.lgs.util.parseExceptionMessage
@@ -101,16 +106,28 @@ fun LoginWithCodeScreen(
     }
   }
 
-  BarcodeInputField { scannedCode ->
+  BarcodeScanner { scannedCode ->
     handleLogin(scannedCode)
   }
 
   Scaffold(
     topBar = {
-      Button(
-        onClick = { navController.popBackStack() }
+      Box(
+        modifier = Modifier
+          .padding(14.dp)
+          .shadow(elevation = 2.dp, shape = CircleShape)
+          .size(42.dp)
+          .clip(CircleShape)
+          .background(MaterialTheme.colorScheme.surfaceContainerLow)
+          .clickable(onClick = { navController.popBackStack() }),
+        contentAlignment = Alignment.Center
       ) {
-        Text(text = "ย้อนกลับ", fontSize = 18.sp)
+        Icon(
+          modifier = Modifier.size(24.dp),
+          painter = painterResource(R.drawable.arrow_back_ios_new_24px),
+          contentDescription = "arrow_back_ios_new_24px",
+          tint = MaterialTheme.colorScheme.onSurface
+        )
       }
     },
     containerColor = Color.Transparent
@@ -127,7 +144,7 @@ fun LoginWithCodeScreen(
             close()
           }
           val bottomLeftPath = Path().apply {
-            moveTo(0f, size.height * 0.93f)
+            moveTo(0f, size.height * 0.90f)
             lineTo(0f, size.height)
             lineTo(size.width * 0.25f, size.height)
             close()
@@ -150,7 +167,7 @@ fun LoginWithCodeScreen(
           text = "LGS",
           fontSize = 42.sp,
           fontWeight = FontWeight.Bold,
-          color = Color.Blue
+          color = LgsBlue
         )
 
         HorizontalDivider(
@@ -160,14 +177,13 @@ fun LoginWithCodeScreen(
         )
 
         Text(
-          text = "ลงชื่อเข้าใช้งานด้วย Qr Code",
+          text = "ลงชื่อเข้าใช้งานด้วย QrCode",
           fontSize = 24.sp,
-          fontWeight = FontWeight.Bold,
-          color = Color.Black
+          fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-          text = "LGS System",
+          text = "Light Guiding Station System",
           fontSize = 18.sp,
           color = Color.Gray
         )

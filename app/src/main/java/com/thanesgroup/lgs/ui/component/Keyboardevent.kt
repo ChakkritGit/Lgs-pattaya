@@ -20,7 +20,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.onGloballyPositioned
 
 @Composable
-fun BarcodeInputField(
+fun BarcodeScanner(
   onScanComplete: (String) -> Unit
 ) {
   val focusRequester = remember { FocusRequester() }

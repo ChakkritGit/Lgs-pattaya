@@ -77,7 +77,7 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
       SplashScreen()
       LaunchedEffect(authState) {
         if (!authState.isLoading) {
-          delay(1500L)
+          delay(5000L)
 
           val destination = if (authState.isAuthenticated) Routes.Main.route else Routes.Login.route
           navController.navigate(destination) {
