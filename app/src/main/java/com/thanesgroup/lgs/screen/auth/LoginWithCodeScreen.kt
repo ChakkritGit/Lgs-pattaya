@@ -2,6 +2,7 @@ package com.thanesgroup.lgs.screen.auth
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,12 +15,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +57,7 @@ import com.thanesgroup.lgs.util.parseErrorMessage
 import com.thanesgroup.lgs.util.parseExceptionMessage
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginWithCodeScreen(
   navController: NavHostController,
@@ -60,6 +68,8 @@ fun LoginWithCodeScreen(
 
   var errorMessage by remember { mutableStateOf("") }
   var isLoading by remember { mutableStateOf(false) }
+  val tooltipState = remember { TooltipState() }
+  val positionProvider = TooltipDefaults.rememberTooltipPositionProvider()
 
   fun handleLogin(scannedCode: String) {
     if (scannedCode.isEmpty() || isLoading) {
@@ -112,22 +122,32 @@ fun LoginWithCodeScreen(
 
   Scaffold(
     topBar = {
-      Box(
-        modifier = Modifier
-          .padding(14.dp)
-          .shadow(elevation = 2.dp, shape = CircleShape)
-          .size(42.dp)
-          .clip(CircleShape)
-          .background(MaterialTheme.colorScheme.surfaceContainerLow)
-          .clickable(onClick = { navController.popBackStack() }),
-        contentAlignment = Alignment.Center
+      TooltipBox(
+        positionProvider = positionProvider,
+        tooltip = {
+          PlainTooltip {
+            Text("ย้อนกลับ")
+          }
+        },
+        state = tooltipState
       ) {
-        Icon(
-          modifier = Modifier.size(24.dp),
-          painter = painterResource(R.drawable.arrow_back_ios_new_24px),
-          contentDescription = "arrow_back_ios_new_24px",
-          tint = MaterialTheme.colorScheme.onSurface
-        )
+        Box(
+          modifier = Modifier
+            .padding(14.dp)
+            .shadow(elevation = 2.dp, shape = CircleShape)
+            .size(42.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .clickable(onClick = { navController.popBackStack() }),
+          contentAlignment = Alignment.Center
+        ) {
+          Icon(
+            modifier = Modifier.size(24.dp),
+            painter = painterResource(R.drawable.arrow_back_ios_new_24px),
+            contentDescription = "arrow_back_ios_new_24px",
+            tint = MaterialTheme.colorScheme.onSurface
+          )
+        }
       }
     },
     containerColor = Color.Transparent
@@ -163,11 +183,19 @@ fun LoginWithCodeScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
       ) {
-        Text(
-          text = "LGS",
-          fontSize = 42.sp,
-          fontWeight = FontWeight.Bold,
-          color = LgsBlue
+//        Text(
+//          text = "LGS",
+//          fontSize = 42.sp,
+//          fontWeight = FontWeight.Bold,
+//          color = LgsBlue
+//        )
+        Image(
+          painter = painterResource(id = R.drawable.lgs_logo),
+          contentDescription = "lgs_logo",
+          modifier = Modifier
+            .fillMaxWidth(0.5f)
+            .padding(bottom = 8.dp)
+            .clip(shape = RoundedCornerShape(32.dp))
         )
 
         HorizontalDivider(

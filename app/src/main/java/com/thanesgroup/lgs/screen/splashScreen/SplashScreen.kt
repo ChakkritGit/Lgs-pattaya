@@ -70,7 +70,7 @@ fun SplashScreen() {
     delay(1000L)
     animationState = AnimationState.FadingOut
 
-    alphaValues.forEachIndexed { index, alpha ->
+    alphaValues.forEachIndexed { _, alpha ->
       launch {
         alpha.animateTo(0f, animationSpec = tween(durationMillis = 400))
       }

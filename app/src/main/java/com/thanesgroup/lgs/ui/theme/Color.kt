@@ -14,3 +14,5 @@ val BlueAlpha40 = Color(0xFF00316B)
 val TextBase40 = Color(0xFF1C1B1F)
 
 val LgsBlue = Color(0xFF007BFF)
+val BgWhite = Color(0xFFFFFFFF)
+val BgDark = Color(0xFF1C1B1F)

@@ -3,6 +3,8 @@ package com.thanesgroup.lgs.screen.auth
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -54,6 +57,7 @@ import com.thanesgroup.lgs.data.viewModel.AuthViewModel
 import com.thanesgroup.lgs.data.viewModel.TokenHolder
 import com.thanesgroup.lgs.navigation.Routes
 import com.thanesgroup.lgs.ui.component.keyboard.Keyboard
+import com.thanesgroup.lgs.ui.theme.BgWhite
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 import com.thanesgroup.lgs.util.parseErrorMessage
 import com.thanesgroup.lgs.util.parseExceptionMessage
@@ -158,11 +162,19 @@ fun LoginScreen(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center
     ) {
-      Text(
-        text = "LGS",
-        fontSize = 42.sp,
-        fontWeight = FontWeight.Bold,
-        color = LgsBlue
+//      Text(
+//        text = "LGS",
+//        fontSize = 42.sp,
+//        fontWeight = FontWeight.Bold,
+//        color = LgsBlue
+//      )
+      Image(
+        painter = painterResource(id = R.drawable.lgs_logo),
+        contentDescription = "lgs_logo",
+        modifier = Modifier
+          .fillMaxWidth(0.5f)
+          .padding(bottom = 8.dp)
+          .clip(shape = RoundedCornerShape(32.dp))
       )
 
       HorizontalDivider(
