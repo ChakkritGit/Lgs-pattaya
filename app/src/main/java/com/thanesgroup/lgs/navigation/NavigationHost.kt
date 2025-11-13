@@ -9,12 +9,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -70,14 +68,13 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
     enterTransition = transitionSpec,
     exitTransition = exitSpec,
     popEnterTransition = popEnterSpec,
-    popExitTransition = popExitSpec,
-    modifier = Modifier.padding(innerPadding)
+    popExitTransition = popExitSpec
   ) {
     composable(route = Routes.Splash.route) {
-      SplashScreen()
+      SplashScreen(innerPadding = innerPadding)
       LaunchedEffect(authState) {
         if (!authState.isLoading) {
-          delay(5000L)
+          delay(4300L)
 
           val destination = if (authState.isAuthenticated) Routes.Main.route else Routes.Login.route
           navController.navigate(destination) {
@@ -93,16 +90,8 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
       LoginScreen(
         navController = navController,
         authViewModel = authViewModel,
-        context = context
-      )
-    }
-
-    composable(route = Routes.Main.route) {
-      MainScreen(
-        navController = navController,
-        authState = authState,
-        authViewModel = authViewModel,
-        context = context
+        context = context,
+        innerPadding = innerPadding
       )
     }
 
@@ -110,7 +99,17 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
       LoginWithCodeScreen(
         navController = navController,
         authViewModel = authViewModel,
-        context = context
+        context = context,
+        innerPadding = innerPadding
+      )
+    }
+
+    composable(route = Routes.Main.route) {
+      MainScreen(
+        context = context,
+        authViewModel = authViewModel,
+        authState = authState,
+        mainNavController = navController
       )
     }
   }

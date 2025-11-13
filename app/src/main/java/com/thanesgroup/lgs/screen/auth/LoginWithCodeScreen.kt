@@ -4,10 +4,12 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,7 +64,8 @@ import kotlinx.coroutines.launch
 fun LoginWithCodeScreen(
   navController: NavHostController,
   authViewModel: AuthViewModel,
-  context: Context
+  context: Context,
+  innerPadding: PaddingValues
 ) {
   val scope = rememberCoroutineScope()
 
@@ -121,6 +124,7 @@ fun LoginWithCodeScreen(
   }
 
   Scaffold(
+    modifier = Modifier.padding(innerPadding),
     topBar = {
       TooltipBox(
         positionProvider = positionProvider,
@@ -134,9 +138,14 @@ fun LoginWithCodeScreen(
         Box(
           modifier = Modifier
             .padding(14.dp)
-            .shadow(elevation = 2.dp, shape = CircleShape)
+            .shadow(elevation = 0.7.dp, shape = CircleShape)
             .size(42.dp)
             .clip(CircleShape)
+            .border(
+              width = 1.dp,
+              color = MaterialTheme.colorScheme.outlineVariant,
+              shape = CircleShape
+            )
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable(onClick = { navController.popBackStack() }),
           contentAlignment = Alignment.Center

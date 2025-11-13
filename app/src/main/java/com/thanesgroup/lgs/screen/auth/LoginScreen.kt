@@ -4,16 +4,17 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,6 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -57,7 +59,6 @@ import com.thanesgroup.lgs.data.viewModel.AuthViewModel
 import com.thanesgroup.lgs.data.viewModel.TokenHolder
 import com.thanesgroup.lgs.navigation.Routes
 import com.thanesgroup.lgs.ui.component.keyboard.Keyboard
-import com.thanesgroup.lgs.ui.theme.BgWhite
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 import com.thanesgroup.lgs.util.parseErrorMessage
 import com.thanesgroup.lgs.util.parseExceptionMessage
@@ -67,7 +68,8 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
   navController: NavHostController,
   authViewModel: AuthViewModel,
-  context: Context
+  context: Context,
+  innerPadding: PaddingValues
 ) {
   val scope = rememberCoroutineScope()
 
@@ -134,6 +136,7 @@ fun LoginScreen(
 
   Box(
     modifier = Modifier
+      .padding(innerPadding)
       .fillMaxSize()
       .drawWithCache {
         val topRightPath = Path().apply {
@@ -220,7 +223,7 @@ fun LoginScreen(
         keyboardOptions = KeyboardOptions.Default.copy(
           imeAction = ImeAction.Next
         ),
-        shape = RoundedCornerShape(100.dp)
+        shape = CircleShape
       )
       Spacer(modifier = Modifier.height(16.dp))
 
@@ -252,7 +255,7 @@ fun LoginScreen(
           keyboardType = KeyboardType.Password,
           imeAction = ImeAction.Done
         ),
-        shape = RoundedCornerShape(100.dp),
+        shape = CircleShape,
         visualTransformation = PasswordVisualTransformation()
 
       )
@@ -266,7 +269,7 @@ fun LoginScreen(
         modifier = Modifier
           .fillMaxWidth()
           .height(50.dp),
-        shape = RoundedCornerShape(100.dp),
+        shape = CircleShape,
         colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
         enabled = !isLoading
       ) {
@@ -289,13 +292,13 @@ fun LoginScreen(
         modifier = Modifier
           .fillMaxWidth()
           .height(50.dp),
-        shape = RoundedCornerShape(100.dp),
-        border = BorderStroke(1.dp, Color.LightGray)
+        shape = CircleShape,
+        colors = ButtonDefaults.outlinedButtonColors(MaterialTheme.colorScheme.surfaceContainerLow),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
       ) {
         Text(
           text = "เข้าสู่ระบบด้วย QrCode",
           fontSize = 18.sp,
-          color = LgsBlue,
           fontWeight = FontWeight.Normal
         )
       }
