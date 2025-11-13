@@ -90,7 +90,7 @@ fun DispenseScreen(
     Spacer(modifier = Modifier.height(24.dp))
 
     Text(
-      text = "Scan เลขที่ใบสั่งยา",
+      text = "สแกน hn",
       fontSize = 24.sp,
       fontWeight = FontWeight.Bold,
       color = MaterialTheme.colorScheme.onBackground
