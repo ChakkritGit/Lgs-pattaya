@@ -77,7 +77,7 @@ fun DispenseScreen(
         .size(220.dp)
         .clip(CircleShape)
         .padding(4.dp)
-        .border(BorderStroke(6.dp, LgsBlue), CircleShape),
+        .border(BorderStroke(4.dp, LgsBlue), CircleShape),
       contentAlignment = Alignment.Center
     ) {
       Icon(

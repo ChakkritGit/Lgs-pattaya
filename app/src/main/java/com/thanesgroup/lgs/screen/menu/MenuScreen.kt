@@ -41,9 +41,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.thanesgroup.lgs.R
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
+import com.thanesgroup.lgs.navigation.MenuSubRoutes
 import com.thanesgroup.lgs.navigation.Routes
+import com.thanesgroup.lgs.ui.component.menu.SettingsMenuItem
 import com.thanesgroup.lgs.ui.theme.ibmpiexsansthailooped
 import kotlinx.coroutines.launch
 
@@ -51,6 +54,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MenuScreen(
   mainNavController: NavHostController,
+  navController: NavHostController,
   authState: AuthState,
   authViewModel: AuthViewModel,
   context: Context
@@ -76,35 +80,22 @@ fun MenuScreen(
         .verticalScroll(rememberScrollState())
         .background(MaterialTheme.colorScheme.surface)
     ) {
-//      Text(
-//        text = "ACCOUNT",
-//        style = MaterialTheme.typography.labelSmall,
-//        color = MaterialTheme.colorScheme.onSurfaceVariant,
-//        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-//      )
-//
-//      SettingsMenuItem(
-//        icon = R.drawable.arrow_drop_up_24px,
-//        text = "Profile",
-//        onClick = { /* TODO: Navigate to Profile */ }
-//      )
-//      SettingsMenuItem(
-//        icon = R.drawable.arrow_drop_up_24px,
-//        text = "Preferences",
-//        onClick = { /* TODO: Navigate to Preferences */ }
-//      )
-//      SettingsMenuItem(
-//        icon = R.drawable.arrow_drop_up_24px,
-//        text = "Notifications",
-//        onClick = { /* TODO: Navigate to Notifications */ }
-//      )
-//      SettingsMenuItem(
-//        icon = R.drawable.arrow_drop_up_24px,
-//        text = "Privacy Settings",
-//        onClick = { /* TODO: Navigate to Privacy Settings */ }
-//      )
+      Text(
+        text = "ทั่วไป",
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+      )
 
-//      Spacer(modifier = Modifier.height(24.dp))
+      SettingsMenuItem(
+        icon = R.drawable.autorenew_24px,
+        text = "การอัปเดทซอฟแวร์",
+        onClick = {
+          navController.navigate(MenuSubRoutes.AppUpdate.route)
+        }
+      )
+
+      Spacer(modifier = Modifier.height(24.dp))
 
       Button(
         modifier = Modifier
@@ -131,22 +122,6 @@ fun MenuScreen(
           shape = RoundedCornerShape(38.dp)
         )
         .clip(shape = RoundedCornerShape(38.dp)),
-//      icon = {
-//        Surface(
-//          modifier = Modifier
-//            .clip(shape = CircleShape),
-//          color = LgsBlue.copy(alpha = 0.25f)
-//        ) {
-//          Icon(
-//            painter = painterResource(R.drawable.exit_to_app_24px),
-//            contentDescription = "exit_to_app_24px",
-//            tint = LgsBlue,
-//            modifier = Modifier
-//              .size(64.dp)
-//              .padding(12.dp)
-//          )
-//        }
-//      },
       text = {
         Column(
           verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -202,7 +177,6 @@ fun MenuScreen(
             onClick = {
               showLogoutDialog = false
             },
-//            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.surface),
             shape = CircleShape,
             modifier = Modifier
               .fillMaxWidth()
