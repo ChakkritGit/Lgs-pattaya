@@ -274,7 +274,12 @@ fun LoginScreen(
         enabled = !isLoading
       ) {
         if (!isLoading) {
-          Text(text = "เข้าสู่ระบบ", fontSize = 18.sp, fontWeight = FontWeight.Normal)
+          Text(
+            text = "เข้าสู่ระบบ",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Normal,
+            color = Color.White
+          )
         } else {
           CircularProgressIndicator(
             modifier = Modifier.size(24.dp),
