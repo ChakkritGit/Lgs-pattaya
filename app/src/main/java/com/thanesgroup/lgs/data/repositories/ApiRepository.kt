@@ -21,7 +21,7 @@ object ApiRepository {
   }
 
   suspend fun dispense(hn: String): Response<ApiResponse<DispenseModel>> {
-    return RetrofitInstance.api.dispense(hn)
+    return RetrofitInstance.createApiWithAuth().dispense(hn)
   }
 
   suspend fun getUpdate(): Response<ApiResponse<UpdateInfo>> {

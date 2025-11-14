@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +43,8 @@ fun SettingsMenuItem(
       modifier = Modifier.weight(1f)
     )
     Icon(
-      painter = painterResource(R.drawable.arrow_forward_ios_24px),
+      painter = painterResource(R.drawable.chevron_right_24px),
+      modifier = Modifier.size(28.dp),
       contentDescription = "Go to $text",
       tint = MaterialTheme.colorScheme.onSurfaceVariant
     )
