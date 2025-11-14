@@ -247,7 +247,9 @@ private fun DispenseListScreen(data: DispenseModel, onClear: () -> Unit) {
     Spacer(modifier = Modifier.height(12.dp))
     Button(
       onClick = onClear,
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier
+        .fillMaxWidth()
+        .height(42.dp),
       colors = ButtonDefaults.buttonColors(LgsBlue)
     ) {
       Text("สแกนรายการใหม่", fontWeight = FontWeight.Bold, color = Color.White)
@@ -260,25 +262,19 @@ private fun DispenseListScreen(data: DispenseModel, onClear: () -> Unit) {
 private fun OrderItemCard(order: OrderModel) {
   val statusText: String
   val statusColor: Color
-//  val cardBackgroundColor: Color
 
   when (order.f_dispensestatus) {
     "0" -> {
-      statusText = "รอจัดยา"
+      statusText = "ยังไม่มีการจ่ายยา"
       statusColor = Color(0xFFFFA726)
-//      cardBackgroundColor = MaterialTheme.colorScheme.surface
     }
-
     "1" -> {
-      statusText = "จัดยาแล้ว"
+      statusText = "จ่ายยาแล้ว"
       statusColor = Color(0xFF66BB6A)
-//      cardBackgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest
     }
-
     else -> {
       statusText = "ไม่ทราบสถานะ"
       statusColor = MaterialTheme.colorScheme.onSurfaceVariant
-//      cardBackgroundColor = MaterialTheme.colorScheme.surface
     }
   }
 
@@ -298,7 +294,6 @@ private fun OrderItemCard(order: OrderModel) {
         color = LgsBlue
       )
       Spacer(modifier = Modifier.height(8.dp))
-
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -314,7 +309,6 @@ private fun OrderItemCard(order: OrderModel) {
         )
       }
       Spacer(modifier = Modifier.height(8.dp))
-
       Row(
         verticalAlignment = Alignment.CenterVertically
       ) {
