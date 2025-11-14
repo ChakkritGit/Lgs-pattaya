@@ -154,7 +154,6 @@ fun MainScreen(
       ) {
         composable(route = BottomNavDestination.DISPENSE.startDestinationRoute) {
           DispenseScreen(
-            navController = navController,
             context = context
           )
         }

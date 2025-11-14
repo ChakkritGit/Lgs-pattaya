@@ -1,6 +1,7 @@
 package com.thanesgroup.lgs.data.repositories
 
 import com.thanesgroup.lgs.data.model.ApiResponse
+import com.thanesgroup.lgs.data.model.DispenseModel
 import com.thanesgroup.lgs.data.model.LoginRequest
 import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.UpdateInfo
@@ -17,6 +18,10 @@ object ApiRepository {
   suspend fun qrLogin(username: String): Response<ApiResponse<UserAuthData>> {
     val request = QrLoginRequest(username)
     return RetrofitInstance.api.qrLogin(request)
+  }
+
+  suspend fun dispense(hn: String): Response<ApiResponse<DispenseModel>> {
+    return RetrofitInstance.api.dispense(hn)
   }
 
   suspend fun getUpdate(): Response<ApiResponse<UpdateInfo>> {

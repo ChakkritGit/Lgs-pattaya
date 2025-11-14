@@ -1,0 +1,45 @@
+package com.thanesgroup.lgs.data.viewModel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.thanesgroup.lgs.data.repository.SettingsRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+class DataStoreViewModel(
+  private val settingsRepository: SettingsRepository
+) : ViewModel() {
+
+  val hn: StateFlow<String> = settingsRepository.hn
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(5000),
+      initialValue = "Loading..."
+    )
+
+  fun saveHn(hn: String) {
+    viewModelScope.launch {
+      settingsRepository.saveHn(hn)
+    }
+  }
+
+  fun clearHn() {
+    viewModelScope.launch {
+      settingsRepository.clearHn()
+    }
+  }
+}
+
+class DataStoreViewModelFactory(private val repository: SettingsRepository) :
+  ViewModelProvider.Factory {
+  override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    if (modelClass.isAssignableFrom(DataStoreViewModel::class.java)) {
+      @Suppress("UNCHECKED_CAST")
+      return DataStoreViewModel(repository) as T
+    }
+    throw IllegalArgumentException("Unknown ViewModel class")
+  }
+}

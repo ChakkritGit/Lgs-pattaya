@@ -1,0 +1,18 @@
+package com.thanesgroup.lgs.data.model
+
+data class DispenseModel(
+  val hn: String,
+  val patientName: String,
+  val orders: List<OrderModel>
+)
+
+data class OrderModel(
+  val f_orderitemname: String,
+  val f_orderqty: String,
+  val f_orderunitdesc: String,
+  val f_itemlocationno: String,
+  val f_referenceCode: String,
+  val f_status: String,
+  val f_dispensestatus: String,
+  val f_patientname: String
+)
