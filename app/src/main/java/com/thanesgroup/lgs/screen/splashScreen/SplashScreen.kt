@@ -65,27 +65,27 @@ fun SplashScreen(
     initialValue = 1f,
     targetValue = 0f,
     animationSpec = infiniteRepeatable(
-      animation = tween(durationMillis = 500, easing = LinearEasing),
+      animation = tween(durationMillis = 350, easing = LinearEasing),
       repeatMode = RepeatMode.Reverse
     ), label = "cursorAlpha"
   )
 
   LaunchedEffect(Unit) {
-    delay(1000L)
+    delay(700L)
     animationState = AnimationState.FadingOut
 
     alphaValues.forEachIndexed { _, alpha ->
       launch {
-        alpha.animateTo(0f, animationSpec = tween(durationMillis = 400))
+        alpha.animateTo(0f, animationSpec = tween(durationMillis = 250))
       }
-      delay(150L)
+      delay(120L)
     }
-    delay(500L)
+    delay(350L)
     animationState = AnimationState.Typing
 
     fullText.forEachIndexed { index, _ ->
       displayedTextForTyping = fullText.take(index + 1)
-      delay(400L)
+      delay(250L)
     }
     animationState = AnimationState.Done
   }

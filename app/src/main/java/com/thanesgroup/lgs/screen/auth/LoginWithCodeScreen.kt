@@ -124,26 +124,24 @@ fun LoginWithCodeScreen(
   }
 
   Scaffold(
-    modifier = Modifier.padding(innerPadding),
-    topBar = {
+    modifier = Modifier.padding(innerPadding), topBar = {
       TooltipBox(
         positionProvider = positionProvider,
         tooltip = {
           PlainTooltip {
             Text("ย้อนกลับ")
           }
-        },
-        state = tooltipState
+        }, state = tooltipState
       ) {
         Box(
           modifier = Modifier
-            .padding(14.dp)
+            .padding(12.dp)
             .shadow(elevation = 0.7.dp, shape = CircleShape)
-            .size(42.dp)
+            .size(36.dp)
             .clip(CircleShape)
             .border(
               width = 1.dp,
-              color = MaterialTheme.colorScheme.outlineVariant,
+              color = MaterialTheme.colorScheme.outline,
               shape = CircleShape
             )
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
@@ -158,12 +156,10 @@ fun LoginWithCodeScreen(
           )
         }
       }
-    },
-    containerColor = Color.Transparent
+    }, containerColor = Color.Transparent
   ) { _ ->
     Box(
       modifier = Modifier
-//        .padding(innerPadding)
         .fillMaxSize()
         .drawWithCache {
           val topRightPath = Path().apply {
@@ -183,8 +179,7 @@ fun LoginWithCodeScreen(
             drawPath(topRightPath, color = LgsBlue)
             drawPath(bottomLeftPath, color = LgsBlue)
           }
-        }
-    ) {
+        }) {
       Column(
         modifier = Modifier
           .fillMaxSize()
@@ -202,39 +197,39 @@ fun LoginWithCodeScreen(
           painter = painterResource(id = R.drawable.lgs_logo),
           contentDescription = "lgs_logo",
           modifier = Modifier
-            .fillMaxWidth(0.5f)
-            .padding(bottom = 8.dp)
+            .fillMaxWidth(0.3f)
+            .padding(bottom = 15.dp)
             .clip(shape = RoundedCornerShape(32.dp))
         )
 
         HorizontalDivider(
           modifier = Modifier
             .fillMaxWidth(0.9f)
-            .padding(bottom = 40.dp), thickness = 4.dp, color = LgsBlue
+            .padding(bottom = 25.dp),
+          thickness = 3.dp,
+          color = LgsBlue
         )
 
         Text(
           text = "ลงชื่อเข้าใช้งานด้วย QrCode",
-          fontSize = 24.sp,
-          fontWeight = FontWeight.Bold
+          fontWeight = FontWeight.Bold,
+          style = MaterialTheme.typography.titleLarge
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
           text = "Light Guiding Station System",
-          fontSize = 18.sp,
-          color = Color.Gray
+          color = Color.Gray,
+          style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.height(40.dp))
 
         if (isLoading) {
           CircularProgressIndicator(
-            modifier = Modifier.size(32.dp),
-            color = LgsBlue,
-            strokeWidth = 2.dp
+            modifier = Modifier.size(32.dp), color = LgsBlue, strokeWidth = 2.dp
           )
         } else {
           Icon(
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(54.dp),
             tint = LgsBlue,
             painter = painterResource(R.drawable.barcode_scanner_24px),
             contentDescription = "barcode_scanner_24px"

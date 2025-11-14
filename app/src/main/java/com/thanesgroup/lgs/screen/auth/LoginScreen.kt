@@ -4,6 +4,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -156,8 +157,7 @@ fun LoginScreen(
           drawPath(topRightPath, color = LgsBlue)
           drawPath(bottomLeftPath, color = LgsBlue)
         }
-      }
-  ) {
+      }) {
     Column(
       modifier = Modifier
         .fillMaxSize()
@@ -175,34 +175,37 @@ fun LoginScreen(
         painter = painterResource(id = R.drawable.lgs_logo),
         contentDescription = "lgs_logo",
         modifier = Modifier
-          .fillMaxWidth(0.5f)
-          .padding(bottom = 8.dp)
+          .fillMaxWidth(0.3f)
+          .padding(bottom = 15.dp)
           .clip(shape = RoundedCornerShape(32.dp))
       )
 
       HorizontalDivider(
         modifier = Modifier
           .fillMaxWidth(0.9f)
-          .padding(bottom = 40.dp), thickness = 4.dp, color = LgsBlue
+          .padding(bottom = 25.dp),
+        thickness = 3.dp,
+        color = LgsBlue
       )
 
       Text(
         text = "ลงชื่อเข้าใช้งาน",
-        fontSize = 28.sp,
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
+        style = MaterialTheme.typography.titleLarge
       )
       Spacer(modifier = Modifier.height(4.dp))
       Text(
         text = "Light Guiding Station System",
-        fontSize = 18.sp,
-        color = Color.Gray
+        color = Color.Gray,
+        style = MaterialTheme.typography.titleSmall
       )
-      Spacer(modifier = Modifier.height(40.dp))
+      Spacer(modifier = Modifier.height(35.dp))
 
       OutlinedTextField(
         value = username,
         onValueChange = { username = it },
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+          .fillMaxWidth(),
         label = { Text("ชื่อผู้ใช้") },
         leadingIcon = {
           Icon(
@@ -214,7 +217,8 @@ fun LoginScreen(
         colors = OutlinedTextFieldDefaults.colors(
           focusedBorderColor = LgsBlue,
           focusedLabelColor = LgsBlue,
-          focusedLeadingIconColor = LgsBlue
+          focusedLeadingIconColor = LgsBlue,
+          unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
         ),
         keyboardActions = KeyboardActions(
           onNext = {
@@ -244,7 +248,8 @@ fun LoginScreen(
         colors = OutlinedTextFieldDefaults.colors(
           focusedBorderColor = LgsBlue,
           focusedLabelColor = LgsBlue,
-          focusedLeadingIconColor = LgsBlue
+          focusedLeadingIconColor = LgsBlue,
+          unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
         ),
         keyboardActions = KeyboardActions(
           onDone = {
@@ -252,8 +257,7 @@ fun LoginScreen(
             handleLogin()
           }),
         keyboardOptions = KeyboardOptions(
-          keyboardType = KeyboardType.Password,
-          imeAction = ImeAction.Done
+          keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
         ),
         shape = CircleShape,
         visualTransformation = PasswordVisualTransformation()
@@ -267,8 +271,7 @@ fun LoginScreen(
           handleLogin()
         },
         modifier = Modifier
-          .fillMaxWidth()
-          .height(50.dp),
+          .fillMaxWidth(),
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
         enabled = !isLoading
@@ -276,35 +279,32 @@ fun LoginScreen(
         if (!isLoading) {
           Text(
             text = "เข้าสู่ระบบ",
-            fontSize = 18.sp,
             fontWeight = FontWeight.Normal,
-            color = Color.White
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium
           )
         } else {
           CircularProgressIndicator(
-            modifier = Modifier.size(24.dp),
-            color = LgsBlue,
-            strokeWidth = 2.dp
+            modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
           )
         }
       }
-      Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(12.dp))
 
       OutlinedButton(
         onClick = {
           navController.navigate(Routes.QrLogin.route)
         },
         modifier = Modifier
-          .fillMaxWidth()
-          .height(50.dp),
+          .fillMaxWidth(),
         shape = CircleShape,
         colors = ButtonDefaults.outlinedButtonColors(MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
       ) {
         Text(
           text = "เข้าสู่ระบบด้วย QrCode",
-          fontSize = 18.sp,
-          fontWeight = FontWeight.Normal
+          fontWeight = FontWeight.Normal,
+          style = MaterialTheme.typography.titleMedium
         )
       }
     }

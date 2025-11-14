@@ -5,9 +5,11 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +31,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,7 +66,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun DispenseScreen(
-  context: Context
+  context: Context,
+  contentPadding: PaddingValues
 ) {
   val scope = rememberCoroutineScope()
   var errorMessage by remember { mutableStateOf("") }
@@ -136,31 +141,40 @@ fun DispenseScreen(
   }
 
   if (isLoading) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+      modifier = Modifier
+        .fillMaxSize(),
+      contentAlignment = Alignment.Center
+    ) {
       CircularProgressIndicator(
-        modifier = Modifier.size(32.dp),
+        modifier = Modifier.size(24.dp),
         color = LgsBlue,
         strokeWidth = 2.dp
       )
     }
   } else if (dispenseData == null) {
-    ScanPromptUI()
+    ScanPromptUI(contentPadding)
   } else {
-    DispenseListScreen(
-      data = dispenseData!!,
-      onClear = {
-        dispenseData = null
-        dataStoreViewModel.clearHn()
-      }
-    )
+    Box(
+      modifier = Modifier.padding(contentPadding)
+    ) {
+      DispenseListScreen(
+        data = dispenseData!!,
+        onClear = {
+          dispenseData = null
+          dataStoreViewModel.clearHn()
+        }
+      )
+    }
   }
 }
 
 @Composable
-private fun ScanPromptUI() {
+private fun ScanPromptUI(contentPadding: PaddingValues) {
   Box(
     modifier = Modifier
-      .fillMaxSize(),
+      .fillMaxSize()
+      .padding(contentPadding),
     contentAlignment = Alignment.Center
   ) {
     Column(
@@ -173,24 +187,24 @@ private fun ScanPromptUI() {
     ) {
       Text(
         text = "Light Guiding Station",
-        fontSize = 32.sp,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground
+        style = MaterialTheme.typography.titleLarge
       )
       Text(
-        text = "( LGS )", fontSize = 28.sp, color = MaterialTheme.colorScheme.onBackground
+        text = "( LGS )",
+        fontWeight = FontWeight.Normal,
+        style = MaterialTheme.typography.titleLarge
       )
       Spacer(modifier = Modifier.height(22.dp))
       Text(
         text = "Scan Barcode / QRCode",
-        fontSize = 20.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        style = MaterialTheme.typography.bodyLarge
       )
       Spacer(modifier = Modifier.height(42.dp))
 
       Box(
         modifier = Modifier
-          .size(220.dp)
+          .size(200.dp)
           .clip(CircleShape)
           .padding(4.dp)
           .border(BorderStroke(4.dp, LgsBlue), CircleShape), contentAlignment = Alignment.Center
@@ -198,7 +212,7 @@ private fun ScanPromptUI() {
         Icon(
           painter = painterResource(id = R.drawable.lgs_scan),
           contentDescription = "Scan Barcode or QRCode",
-          modifier = Modifier.size(120.dp),
+          modifier = Modifier.size(100.dp),
           tint = MaterialTheme.colorScheme.onSurface
         )
       }
@@ -206,15 +220,13 @@ private fun ScanPromptUI() {
 
       Text(
         text = "สแกน hn",
-        fontSize = 24.sp,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.onBackground
+        style = MaterialTheme.typography.titleLarge
       )
       Spacer(modifier = Modifier.height(12.dp))
       Text(
         text = "จัดยาตามรายการยาในใบสั่งยาที่ทำการระบุ",
-        fontSize = 16.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
+        style = MaterialTheme.typography.bodyMedium
       )
     }
   }
@@ -227,10 +239,10 @@ private fun DispenseListScreen(data: DispenseModel, onClear: () -> Unit) {
       .fillMaxSize()
       .padding(horizontal = 16.dp)
   ) {
-    Text(text = "HN: ${data.hn}", style = MaterialTheme.typography.titleMedium)
+    Text(text = "HN: ${data.hn}", style = MaterialTheme.typography.titleSmall)
     Text(
       text = data.patientName,
-      style = MaterialTheme.typography.titleLarge,
+      style = MaterialTheme.typography.titleMedium,
       fontWeight = FontWeight.Bold
     )
     Spacer(modifier = Modifier.height(16.dp))
@@ -238,7 +250,6 @@ private fun DispenseListScreen(data: DispenseModel, onClear: () -> Unit) {
     LazyColumn(
       modifier = Modifier
         .weight(1f),
-//      verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
       items(data.orders) { order ->
         OrderItemCard(order = order)
@@ -268,10 +279,12 @@ private fun OrderItemCard(order: OrderModel) {
       statusText = "ยังไม่มีการจ่ายยา"
       statusColor = Color(0xFFFFA726)
     }
+
     "1" -> {
       statusText = "จ่ายยาแล้ว"
       statusColor = Color(0xFF66BB6A)
     }
+
     else -> {
       statusText = "ไม่ทราบสถานะ"
       statusColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -281,10 +294,15 @@ private fun OrderItemCard(order: OrderModel) {
   Card(
     modifier = Modifier
       .fillMaxWidth()
-      .padding(bottom = 16.dp),
-    elevation = CardDefaults.cardElevation(defaultElevation = 1.3.dp),
+      .padding(bottom = 16.dp)
+      .border(
+        width = 1.dp,
+        color = MaterialTheme.colorScheme.outlineVariant,
+        shape = RoundedCornerShape(12.dp)
+      ),
+    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     shape = RoundedCornerShape(12.dp),
-    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
   ) {
     Column(modifier = Modifier.padding(16.dp)) {
       Text(

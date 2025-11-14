@@ -19,6 +19,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
+import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
 import com.thanesgroup.lgs.screen.auth.LoginScreen
 import com.thanesgroup.lgs.screen.auth.LoginWithCodeScreen
 import com.thanesgroup.lgs.screen.main.MainScreen
@@ -28,6 +29,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController, context: Context) {
   val authViewModel: AuthViewModel = viewModel()
+  val updateViewModel: UpdateViewModel = viewModel()
   val authState by authViewModel.authState.collectAsState()
 
   LaunchedEffect(Unit) {
@@ -74,7 +76,7 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
       SplashScreen(innerPadding = innerPadding)
       LaunchedEffect(authState) {
         if (!authState.isLoading) {
-          delay(4300L)
+          delay(2500L)
 
           val destination = if (authState.isAuthenticated) Routes.Main.route else Routes.Login.route
           navController.navigate(destination) {
@@ -109,7 +111,8 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
         context = context,
         authViewModel = authViewModel,
         authState = authState,
-        mainNavController = navController
+        mainNavController = navController,
+        updateViewModel = updateViewModel
       )
     }
   }

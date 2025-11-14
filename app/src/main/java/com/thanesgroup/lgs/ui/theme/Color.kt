@@ -18,3 +18,4 @@ val BgWhite = Color(0xFFFFFFFF)
 val BgDark = Color(0xFF1C1B1F)
 
 val BgGray = Color(0xFFA9A9A9)
+val Red40 = Color(0xFFE0382B)

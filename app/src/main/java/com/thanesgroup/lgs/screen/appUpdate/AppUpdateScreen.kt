@@ -1,7 +1,6 @@
 package com.thanesgroup.lgs.screen.appUpdate
 
 import android.content.Intent
-import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -12,22 +11,26 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TooltipState
@@ -46,24 +49,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.thanesgroup.lgs.R
 import com.thanesgroup.lgs.data.model.UpdateInfo
 import com.thanesgroup.lgs.data.viewModel.UpdateState
 import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
+import com.thanesgroup.lgs.ui.theme.LgsBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppUpdateScreen(
+  updateViewModel: UpdateViewModel,
   navController: NavHostController
 ) {
   val context = LocalContext.current
-  val updateViewModel: UpdateViewModel = viewModel()
   val updateState by updateViewModel.updateState.collectAsState()
-  val tooltipState = remember { TooltipState() }
-  val positionProvider = TooltipDefaults.rememberTooltipPositionProvider()
 
   val installPermissionLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.StartActivityForResult()
@@ -77,143 +79,220 @@ fun AppUpdateScreen(
 
   Scaffold(
     topBar = {
-      TopAppBar(
-        navigationIcon = {
-          TooltipBox(
-            positionProvider = positionProvider,
-            tooltip = {
-              PlainTooltip {
-                Text("ย้อนกลับ")
-              }
-            },
-            state = tooltipState
-          ) {
-            Box(
-              modifier = Modifier
-                .padding(14.dp)
-                .shadow(elevation = 0.7.dp, shape = CircleShape)
-                .size(42.dp)
-                .clip(CircleShape)
-                .border(
-                  width = 1.dp,
-                  color = MaterialTheme.colorScheme.outlineVariant,
-                  shape = CircleShape
-                )
-                .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                .clickable(onClick = { navController.popBackStack() }),
-              contentAlignment = Alignment.Center
-            ) {
-              Icon(
-                modifier = Modifier.size(24.dp),
-                painter = painterResource(R.drawable.arrow_back_ios_new_24px),
-                contentDescription = "arrow_back_ios_new_24px",
-                tint = MaterialTheme.colorScheme.onSurface
-              )
-            }
-          }
-        },
-        title = { Text(text = "การอัปเดทซอฟแวร์", fontWeight = FontWeight.Bold) },
-      )
-    },
-    containerColor = Color.Transparent
-  ) { _ ->
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-      Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-      ) {
-        Icon(
-          painter = painterResource(id = R.drawable.check_circle_24px),
-          contentDescription = "check_circle_24px",
-          modifier = Modifier.size(42.dp),
-          tint = MaterialTheme.colorScheme.onSurface
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+      TopAppBar(title = {
         Text(
-          text = "เวอร์ชั่น ${updateViewModel.getBuildVersion()}",
-          fontSize = 18.sp,
+          text = "การอัปเดตซอฟต์แวร์",
+          style = MaterialTheme.typography.titleLarge,
           fontWeight = FontWeight.Bold
         )
-        Text(
-          text = "เวอร์ชั่นล่าสุด",
-          fontSize = 14.sp
-        )
-      }
-    }
-
-    when (val state = updateState) {
-      is UpdateState.UpdateAvailable -> {
-        UpdateAvailableDialog(
-          updateInfo = state.info,
-          onUpdateClick = {
-            if (context.packageManager.canRequestPackageInstalls()) {
-              updateViewModel.downloadUpdate(state.info)
-            } else {
-              val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                data = Uri.parse("package:${context.packageName}")
-              }
-              installPermissionLauncher.launch(intent)
-            }
-          },
-          onDismiss = { /* ทำอะไรบางอย่างเมื่อผู้ใช้ไม่อัปเดต */ }
-        )
-      }
-
-      is UpdateState.Downloading -> {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-          Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator()
+      }, navigationIcon = {
+        TooltipBox(
+          positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+          tooltip = { PlainTooltip { Text("ย้อนกลับ") } },
+          state = remember { TooltipState() }) {
+          Box(
+            modifier = Modifier
+              .padding(12.dp)
+              .shadow(elevation = 0.7.dp, shape = CircleShape)
+              .size(36.dp)
+              .clip(CircleShape)
+              .border(
+                width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape
+              )
+              .background(MaterialTheme.colorScheme.surfaceContainerLow)
+              .clickable(onClick = { navController.popBackStack() }),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              modifier = Modifier.size(24.dp),
+              painter = painterResource(R.drawable.arrow_back_ios_new_24px),
+              contentDescription = "arrow_back_ios_new_24px",
+              tint = MaterialTheme.colorScheme.onSurface
+            )
+          }
+        }
+      })
+    }) { innerPadding ->
+    Box(
+      modifier = Modifier
+        .padding(innerPadding)
+        .fillMaxSize()
+        .padding(horizontal = 16.dp)
+    ) {
+      when (val state = updateState) {
+        is UpdateState.Checking -> {
+          Column(
+            modifier = Modifier
+              .fillMaxSize()
+              .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+          ) {
+            CircularProgressIndicator(
+              modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("กำลังดาวน์โหลด...")
+            Text(
+              "กำลังตรวจสอบอัปเดต...",
+              style = MaterialTheme.typography.labelLarge,
+            )
+          }
+        }
+
+        is UpdateState.Idle -> {
+          Column(
+            modifier = Modifier
+              .fillMaxSize()
+              .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+          ) {
+            LatestVersionUI(updateViewModel = updateViewModel)
+          }
+        }
+
+        is UpdateState.UpdateAvailable -> {
+          UpdateDetails(
+            updateInfo = state.info, onDownloadClick = {
+              if (context.packageManager.canRequestPackageInstalls()) {
+                updateViewModel.downloadUpdate(state.info)
+              } else {
+                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                  data = "package:${context.packageName}".toUri()
+                }
+                installPermissionLauncher.launch(intent)
+              }
+            })
+        }
+
+        is UpdateState.Downloading -> {
+          Column(
+            modifier = Modifier
+              .fillMaxSize()
+              .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+          ) {
+            DownloadProgress(progress = state.progress)
+          }
+        }
+
+        is UpdateState.DownloadComplete -> {
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .verticalScroll(rememberScrollState()),
+            contentAlignment = Alignment.Center
+          ) {
+            Button(
+              onClick = { updateViewModel.installUpdate(context, state.fileUri) },
+              modifier = Modifier.fillMaxWidth(),
+              colors = ButtonDefaults.buttonColors(LgsBlue)
+            ) {
+              Text("ติดตั้งตอนนี้", color = Color.White)
+            }
+          }
+        }
+
+        is UpdateState.Failed -> {
+          Column(
+            modifier = Modifier
+              .fillMaxSize()
+              .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+          ) {
+            Text("เกิดข้อผิดพลาด: ${state.message}", color = MaterialTheme.colorScheme.error)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+              onClick = { updateViewModel.checkForUpdate() },
+              colors = ButtonDefaults.buttonColors(LgsBlue)
+            ) {
+              Text("ลองอีกครั้ง", color = Color.White)
+            }
           }
         }
       }
+    }
+  }
 
-      is UpdateState.DownloadComplete -> {
-        LaunchedEffect(Unit) {
-          updateViewModel.installUpdate(context, state.fileUri)
-        }
-      }
-
-      is UpdateState.Failed -> {
-        LaunchedEffect(state.message) {
-          Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
-        }
-      }
-
-      else -> {
-        // ไม่ต้องทำอะไรในสถานะ Idle หรือ Checking
-      }
+  if (updateState is UpdateState.Failed) {
+    val message = (updateState as UpdateState.Failed).message
+    LaunchedEffect(message) {
+      Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
   }
 }
 
 @Composable
-fun UpdateAvailableDialog(
-  updateInfo: UpdateInfo,
-  onUpdateClick: () -> Unit,
-  onDismiss: () -> Unit
-) {
-  AlertDialog(
-    onDismissRequest = onDismiss,
-    title = { Text("มีอัปเดตใหม่!") },
-    text = {
-      Column {
-        Text("เวอร์ชันใหม่ ${updateInfo.versionName} พร้อมให้ติดตั้งแล้ว")
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("มีอะไรใหม่:")
-        Text(updateInfo.changelog)
-      }
-    },
-    confirmButton = {
-      Button(onClick = onUpdateClick) {
-        Text("อัปเดตทันที")
-      }
-    },
-    dismissButton = {
-      TextButton(onClick = onDismiss) {
-        Text("ภายหลัง")
-      }
+private fun LatestVersionUI(updateViewModel: UpdateViewModel) {
+  Column(
+    verticalArrangement = Arrangement.spacedBy(2.dp),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Icon(
+      painter = painterResource(id = R.drawable.check_circle_24px),
+      contentDescription = "Latest Version",
+      modifier = Modifier.size(64.dp)
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Text(
+        text = "LGS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold
+      )
+      Text(
+        text = updateViewModel.getBuildVersion(),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold
+      )
     }
-  )
+    Text(
+      text = "ซอฟต์แวร์ของคุณเป็นเวอร์ชันล่าสุด",
+      style = MaterialTheme.typography.labelLarge,
+      color = Color.Gray
+    )
+  }
+}
+
+@Composable
+private fun UpdateDetails(updateInfo: UpdateInfo, onDownloadClick: () -> Unit) {
+  Column(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(top = 12.dp), horizontalAlignment = Alignment.Start
+  ) {
+    Text("LGS ${updateInfo.versionName}", style = MaterialTheme.typography.titleMedium)
+    Spacer(modifier = Modifier.height(16.dp))
+    Text("มีอะไรใหม่", style = MaterialTheme.typography.titleMedium)
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+      text = updateInfo.changelog,
+      style = MaterialTheme.typography.bodyMedium,
+      color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
+    Spacer(modifier = Modifier.height(24.dp))
+    Button(
+      onClick = onDownloadClick,
+      modifier = Modifier.fillMaxWidth(),
+      colors = ButtonDefaults.buttonColors(LgsBlue)
+    ) {
+      Text("ดาวน์โหลดและติดตั้ง", color = Color.White)
+    }
+  }
+}
+
+@Composable
+private fun DownloadProgress(progress: Int) {
+  Column(
+    modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    LinearProgressIndicator(
+      progress = { progress / 100f }, modifier = Modifier.fillMaxWidth(), color = LgsBlue
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Text("กำลังดาวน์โหลด... $progress%")
+  }
 }

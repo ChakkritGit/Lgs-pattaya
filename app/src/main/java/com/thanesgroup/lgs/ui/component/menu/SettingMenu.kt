@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.thanesgroup.lgs.R
 
 @Composable
@@ -34,6 +35,7 @@ fun SettingsMenuItem(
     Icon(
       painter = painterResource(icon),
       contentDescription = text,
+      modifier = Modifier.size(24.dp),
       tint = MaterialTheme.colorScheme.onSurfaceVariant
     )
     Spacer(modifier = Modifier.width(16.dp))
@@ -44,7 +46,7 @@ fun SettingsMenuItem(
     )
     Icon(
       painter = painterResource(R.drawable.chevron_right_24px),
-      modifier = Modifier.size(28.dp),
+      modifier = Modifier.size(24.dp),
       contentDescription = "Go to $text",
       tint = MaterialTheme.colorScheme.onSurfaceVariant
     )

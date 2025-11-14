@@ -10,7 +10,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
+import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
 import com.thanesgroup.lgs.navigation.BottomNavDestination
 import com.thanesgroup.lgs.navigation.DISPENSE_GRAPH_ROUTE
 import com.thanesgroup.lgs.navigation.MENU_GRAPH_ROUTE
@@ -51,6 +51,7 @@ fun MainScreen(
   mainNavController: NavHostController,
   authState: AuthState,
   authViewModel: AuthViewModel,
+  updateViewModel: UpdateViewModel,
   context: Context
 ) {
   val navController = rememberNavController()
@@ -58,7 +59,6 @@ fun MainScreen(
   val currentDestination = navBackStackEntry?.destination
 
   val isDarkTheme = isSystemInDarkTheme()
-  val navigationBarColor = if (isDarkTheme) Color(0xFF121318) else Color(0xFFFAF8FF)
 
   val transitionSpec: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
     slideInHorizontally(
@@ -91,7 +91,7 @@ fun MainScreen(
   Scaffold(
     bottomBar = {
       NavigationBar(
-        containerColor = navigationBarColor,
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = Modifier
           .drawBehind {
             val strokeWidth = 1.dp.toPx()
@@ -103,7 +103,7 @@ fun MainScreen(
               strokeWidth = strokeWidth
             )
           }
-          .height(85.dp)
+          .height(100.dp)
       ) {
         BottomNavDestination.entries.forEach { destination ->
           val isSelected =
@@ -134,7 +134,7 @@ fun MainScreen(
         }
       }
     }
-  ) { contentPadding ->
+  ) { innerPadding ->
     NavHost(
       navController = navController,
       startDestination = DISPENSE_GRAPH_ROUTE,
@@ -145,8 +145,7 @@ fun MainScreen(
 //      enterTransition = { EnterTransition.None },
 //      exitTransition = { ExitTransition.None },
 //      popEnterTransition = { EnterTransition.None },
-//      popExitTransition = { ExitTransition.None },
-      modifier = Modifier.padding(contentPadding)
+//      popExitTransition = { ExitTransition.None }
     ) {
       navigation(
         startDestination = BottomNavDestination.DISPENSE.startDestinationRoute,
@@ -154,6 +153,7 @@ fun MainScreen(
       ) {
         composable(route = BottomNavDestination.DISPENSE.startDestinationRoute) {
           DispenseScreen(
+            contentPadding = innerPadding,
             context = context
           )
         }
@@ -174,6 +174,7 @@ fun MainScreen(
         }
         composable(route = MenuSubRoutes.AppUpdate.route) {
           AppUpdateScreen(
+            updateViewModel = updateViewModel,
             navController = navController
           )
         }
