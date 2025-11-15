@@ -7,6 +7,7 @@ import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.UpdateInfo
 import com.thanesgroup.lgs.data.model.UserAuthData
 import com.thanesgroup.lgs.remote.config.RetrofitInstance
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 object ApiRepository {
@@ -26,5 +27,9 @@ object ApiRepository {
 
   suspend fun getUpdate(): Response<ApiResponse<UpdateInfo>> {
     return RetrofitInstance.api.getLatestUpdateInfo()
+  }
+
+  suspend fun downloadUpdateFile(url: String): Response<ResponseBody> {
+    return RetrofitInstance.api.downloadApk(url)
   }
 }

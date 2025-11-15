@@ -91,7 +91,7 @@ fun MenuScreen(
 
       SettingsMenuItem(
         icon = R.drawable.autorenew_24px,
-        text = "การอัปเดทซอฟแวร์",
+        text = "อัปเดตแอพ",
         onClick = {
           navController.navigate(MenuSubRoutes.AppUpdate.route)
         }
@@ -127,12 +127,12 @@ fun MenuScreen(
           .padding(horizontal = 56.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = Color.Black,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
       ) {
         Column(
           modifier = Modifier.padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 10.dp),

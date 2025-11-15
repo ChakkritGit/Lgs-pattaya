@@ -1,8 +1,8 @@
 package com.thanesgroup.lgs.screen.appUpdate
 
 import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -16,11 +16,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Divider
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipBox
@@ -50,22 +53,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.thanesgroup.lgs.R
 import com.thanesgroup.lgs.data.model.UpdateInfo
 import com.thanesgroup.lgs.data.viewModel.UpdateState
 import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
+import com.thanesgroup.lgs.ui.theme.Blue80
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppUpdateScreen(
-  updateViewModel: UpdateViewModel,
-  navController: NavHostController
+  updateViewModel: UpdateViewModel, navController: NavHostController
 ) {
   val context = LocalContext.current
   val updateState by updateViewModel.updateState.collectAsState()
+  val updateInfo by updateViewModel.updateInfo.collectAsState()
 
   val installPermissionLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.StartActivityForResult()
@@ -81,7 +84,7 @@ fun AppUpdateScreen(
     topBar = {
       TopAppBar(title = {
         Text(
-          text = "การอัปเดตซอฟต์แวร์",
+          text = "อัปเดตแอพ",
           style = MaterialTheme.typography.titleLarge,
           fontWeight = FontWeight.Bold
         )
@@ -99,7 +102,7 @@ fun AppUpdateScreen(
               .border(
                 width = 1.dp, color = MaterialTheme.colorScheme.outline, shape = CircleShape
               )
-              .background(MaterialTheme.colorScheme.surfaceContainerLow)
+              .background(MaterialTheme.colorScheme.background)
               .clickable(onClick = { navController.popBackStack() }),
             contentAlignment = Alignment.Center
           ) {
@@ -113,113 +116,158 @@ fun AppUpdateScreen(
         }
       })
     }) { innerPadding ->
-    Box(
+    Column(
       modifier = Modifier
         .padding(innerPadding)
         .fillMaxSize()
-        .padding(horizontal = 16.dp)
+        .padding(16.dp)
     ) {
-      when (val state = updateState) {
+      when (updateState) {
         is UpdateState.Checking -> {
-          Column(
-            modifier = Modifier
-              .fillMaxSize()
-              .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-          ) {
-            CircularProgressIndicator(
-              modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-              "กำลังตรวจสอบอัปเดต...",
-              style = MaterialTheme.typography.labelLarge,
-            )
+          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+              modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.Center
+            ) {
+              CircularProgressIndicator(
+                modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
+              )
+              Spacer(modifier = Modifier.height(16.dp))
+              Text(
+                "กำลังตรวจสอบอัปเดต...",
+                style = MaterialTheme.typography.labelLarge,
+              )
+            }
+          }
+        }
+
+        is UpdateState.Failed -> {
+          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+              modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.Center
+            ) {
+              Text(
+                "เกิดข้อผิดพลาดในการตรวจสอบอัปเดต",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelLarge,
+              )
+              Spacer(modifier = Modifier.height(16.dp))
+              Button(
+                onClick = { updateViewModel.checkForUpdate() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = LgsBlue)
+              ) {
+                Text("ลองอีกครั้ง", color = Color.White)
+              }
+            }
           }
         }
 
         is UpdateState.Idle -> {
-          Column(
-            modifier = Modifier
-              .fillMaxSize()
-              .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-          ) {
-            LatestVersionUI(updateViewModel = updateViewModel)
-          }
+          LatestVersionUI(updateViewModel)
         }
 
-        is UpdateState.UpdateAvailable -> {
-          UpdateDetails(
-            updateInfo = state.info, onDownloadClick = {
+        else -> {
+          SoftwareUpdateInfo(
+            updateState = updateState,
+            updateInfo = updateInfo,
+            onDownloadClick = { info ->
               if (context.packageManager.canRequestPackageInstalls()) {
-                updateViewModel.downloadUpdate(state.info)
+                updateViewModel.downloadUpdate(info)
               } else {
                 val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                   data = "package:${context.packageName}".toUri()
                 }
                 installPermissionLauncher.launch(intent)
               }
+            },
+            onInstallClick = { uri ->
+              updateViewModel.installUpdate(context, uri)
             })
-        }
-
-        is UpdateState.Downloading -> {
-          Column(
-            modifier = Modifier
-              .fillMaxSize()
-              .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-          ) {
-            DownloadProgress(progress = state.progress)
-          }
-        }
-
-        is UpdateState.DownloadComplete -> {
-          Box(
-            modifier = Modifier
-              .fillMaxSize()
-              .verticalScroll(rememberScrollState()),
-            contentAlignment = Alignment.Center
-          ) {
-            Button(
-              onClick = { updateViewModel.installUpdate(context, state.fileUri) },
-              modifier = Modifier.fillMaxWidth(),
-              colors = ButtonDefaults.buttonColors(LgsBlue)
-            ) {
-              Text("ติดตั้งตอนนี้", color = Color.White)
-            }
-          }
-        }
-
-        is UpdateState.Failed -> {
-          Column(
-            modifier = Modifier
-              .fillMaxSize()
-              .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-          ) {
-            Text("เกิดข้อผิดพลาด: ${state.message}", color = MaterialTheme.colorScheme.error)
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-              onClick = { updateViewModel.checkForUpdate() },
-              colors = ButtonDefaults.buttonColors(LgsBlue)
-            ) {
-              Text("ลองอีกครั้ง", color = Color.White)
-            }
-          }
         }
       }
     }
   }
+}
 
-  if (updateState is UpdateState.Failed) {
-    val message = (updateState as UpdateState.Failed).message
-    LaunchedEffect(message) {
-      Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+@Composable
+private fun SoftwareUpdateInfo(
+  updateState: UpdateState,
+  updateInfo: UpdateInfo?,
+  onDownloadClick: (UpdateInfo) -> Unit,
+  onInstallClick: (Uri) -> Unit
+) {
+  Column {
+    if (updateInfo != null) {
+      Text(
+        "เวอร์ชันใหม่พร้อมให้ติดตั้ง",
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold
+      )
+      Spacer(Modifier.height(8.dp))
+      Text("LGS ${updateInfo.versionName}", style = MaterialTheme.typography.titleMedium)
+      Divider(modifier = Modifier.padding(vertical = 16.dp))
+
+      Text(
+        "มีอะไรใหม่", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold
+      )
+      Spacer(Modifier.height(8.dp))
+
+      Column(
+        modifier = Modifier
+          .heightIn(max = 350.dp)
+          .verticalScroll(rememberScrollState())
+      ) {
+        Text(
+          text = updateInfo.changelog,
+          style = MaterialTheme.typography.bodyMedium,
+          color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+      }
+
+      Box(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+      ) {
+        when (updateState) {
+          is UpdateState.UpdateAvailable -> {
+            Button(
+              onClick = { onDownloadClick(updateInfo) },
+              modifier = Modifier.fillMaxWidth(),
+              colors = ButtonDefaults.buttonColors(LgsBlue)
+            ) {
+              Text("ดาวน์โหลดและติดตั้ง", color = Color.White)
+            }
+          }
+
+          is UpdateState.Downloading -> {
+            DownloadProgress(updateState.progress)
+          }
+
+          is UpdateState.DownloadComplete -> {
+            Button(
+              onClick = { onInstallClick(updateState.fileUri) },
+              modifier = Modifier.fillMaxWidth(),
+              colors = ButtonDefaults.buttonColors(containerColor = LgsBlue)
+            ) {
+              Text("ติดตั้ง", color = Color.White)
+            }
+          }
+
+          else -> {
+          }
+        }
+      }
+      Divider(modifier = Modifier.padding(vertical = 12.dp))
     }
   }
 }
@@ -258,41 +306,20 @@ private fun LatestVersionUI(updateViewModel: UpdateViewModel) {
 }
 
 @Composable
-private fun UpdateDetails(updateInfo: UpdateInfo, onDownloadClick: () -> Unit) {
-  Column(
-    modifier = Modifier
-      .fillMaxWidth()
-      .padding(top = 12.dp), horizontalAlignment = Alignment.Start
-  ) {
-    Text("LGS ${updateInfo.versionName}", style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(16.dp))
-    Text("มีอะไรใหม่", style = MaterialTheme.typography.titleMedium)
-    Spacer(modifier = Modifier.height(8.dp))
-    Text(
-      text = updateInfo.changelog,
-      style = MaterialTheme.typography.bodyMedium,
-      color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-    Spacer(modifier = Modifier.height(24.dp))
-    Button(
-      onClick = onDownloadClick,
-      modifier = Modifier.fillMaxWidth(),
-      colors = ButtonDefaults.buttonColors(LgsBlue)
-    ) {
-      Text("ดาวน์โหลดและติดตั้ง", color = Color.White)
-    }
-  }
-}
-
-@Composable
 private fun DownloadProgress(progress: Int) {
   Column(
-    modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+    modifier = Modifier.fillMaxWidth(),
+    horizontalAlignment = Alignment.Start
   ) {
     LinearProgressIndicator(
-      progress = { progress / 100f }, modifier = Modifier.fillMaxWidth(), color = LgsBlue
+      progress = { progress / 101f },
+      modifier = Modifier.fillMaxWidth(),
+      trackColor = Blue80,
+      color = LgsBlue,
+      strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+      gapSize = 8.dp
     )
     Spacer(modifier = Modifier.height(8.dp))
-    Text("กำลังดาวน์โหลด... $progress%")
+    Text("กำลังดาวน์โหลด... $progress%", style = MaterialTheme.typography.labelLarge)
   }
 }

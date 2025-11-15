@@ -144,7 +144,7 @@ fun LoginWithCodeScreen(
               color = MaterialTheme.colorScheme.outline,
               shape = CircleShape
             )
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .background(MaterialTheme.colorScheme.background)
             .clickable(onClick = { navController.popBackStack() }),
           contentAlignment = Alignment.Center
         ) {
