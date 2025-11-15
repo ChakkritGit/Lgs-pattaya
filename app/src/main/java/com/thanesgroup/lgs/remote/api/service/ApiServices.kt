@@ -1,7 +1,9 @@
 package com.thanesgroup.lgs.remote.api.service
 
 import com.thanesgroup.lgs.data.model.ApiResponse
+import com.thanesgroup.lgs.data.model.CheckDrugModel
 import com.thanesgroup.lgs.data.model.DispenseModel
+import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.model.LoginRequest
 import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.UpdateInfo
@@ -23,7 +25,13 @@ interface ApiService {
   suspend fun qrLogin(@Body request: QrLoginRequest): Response<ApiResponse<UserAuthData>>
 
   @GET("prescription/order/{hn}")
-  suspend fun dispense(@Path("hn") hn: String, ): Response<ApiResponse<DispenseModel>>
+  suspend fun dispense(@Path("hn") hn: String): Response<ApiResponse<DispenseModel>>
+
+  @GET("prescription/narcotic/{drugcode}")
+  suspend fun checkDrug(@Path("drugcode") drugcode: String): Response<ApiResponse<CheckDrugModel>>
+
+  @GET("prescription/label/{hn}/{drugcode}")
+  suspend fun getLabel(@Path("hn") hn: String, @Path("drugcode") drugcode: String): Response<ApiResponse<LabelModel>>
 
   @GET("v1/app/latest-update") // <<< แก้ไข Endpoint ให้ตรงกับ API ของคุณ
   suspend fun getLatestUpdateInfo(): Response<ApiResponse<UpdateInfo>>

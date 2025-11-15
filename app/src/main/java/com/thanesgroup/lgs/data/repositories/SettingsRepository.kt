@@ -1,4 +1,4 @@
-package com.thanesgroup.lgs.data.repository
+package com.thanesgroup.lgs.data.repositories
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -28,6 +28,7 @@ class SettingsRepository(private val context: Context) {
 
   private object PreferencesKeys {
     val HN = stringPreferencesKey("hn")
+    val SECOND_USER = stringPreferencesKey("second_user")
   }
 
   val hn: Flow<String> = context.dataStore.data
@@ -38,6 +39,12 @@ class SettingsRepository(private val context: Context) {
   suspend fun saveHn(hn: String) {
     context.dataStore.edit { settings ->
       settings[PreferencesKeys.HN] = hn
+    }
+  }
+
+  suspend fun saveSecondUser(name: String) {
+    context.dataStore.edit { settings ->
+      settings[PreferencesKeys.SECOND_USER] = name
     }
   }
 

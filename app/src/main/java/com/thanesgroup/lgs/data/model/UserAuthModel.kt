@@ -2,7 +2,15 @@ package com.thanesgroup.lgs.data.model
 
 data class UserAuthData(
   val id: String,
-  val token: String
+  val token: String,
+  val name: String,
+  val color: String
+)
+
+data class TokenDecodeModel(
+  val id: String,
+  val name: String,
+  val color: String
 )
 
 data class LoginRequest(val username: String, val password: String)

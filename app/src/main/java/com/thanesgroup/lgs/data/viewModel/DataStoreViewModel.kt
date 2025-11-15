@@ -3,7 +3,7 @@ package com.thanesgroup.lgs.data.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.thanesgroup.lgs.data.repository.SettingsRepository
+import com.thanesgroup.lgs.data.repositories.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

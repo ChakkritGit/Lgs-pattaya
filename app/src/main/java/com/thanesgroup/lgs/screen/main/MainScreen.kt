@@ -141,6 +141,14 @@ fun MainScreen(
                 tint = iconColor
               )
             },
+//            label = {
+//              Text(
+//                destination.label,
+//                fontFamily = ibmpiexsansthailooped,
+//                style = MaterialTheme.typography.labelMedium,
+//                color = if (isSelected) LgsBlue else MaterialTheme.colorScheme.onSurfaceVariant
+//              )
+//            },
             colors = NavigationBarItemDefaults.colors(
               indicatorColor = Color.Transparent
             )
@@ -165,6 +173,7 @@ fun MainScreen(
           DispenseScreen(
             contentPadding = innerPadding,
             dispenseViewModel = dispenseViewModel,
+            authState = authState,
             context = context
           )
         }

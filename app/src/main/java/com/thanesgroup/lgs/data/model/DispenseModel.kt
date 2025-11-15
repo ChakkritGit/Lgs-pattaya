@@ -6,8 +6,22 @@ data class DispenseModel(
   val orders: List<OrderModel>
 )
 
-data class OrderModel(
+data class CheckDrugModel(
+  val isNarcotic: Boolean
+)
+
+data class LabelModel(
   val f_orderitemname: String,
+  val f_orderqty: String,
+  val f_orderunitdesc: String,
+  val f_itemlocationno: String,
+  val f_referenceCode: String
+)
+
+data class OrderModel(
+  val f_orderitemcode: String,
+  val f_orderitemname: String,
+  val f_prescriptionnohis: String,
   val f_orderqty: String,
   val f_orderunitdesc: String,
   val f_itemlocationno: String,

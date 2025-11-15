@@ -19,7 +19,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.thanesgroup.lgs.data.repository.SettingsRepository
+import com.thanesgroup.lgs.data.repositories.SettingsRepository
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
 import com.thanesgroup.lgs.data.viewModel.DataStoreViewModel
 import com.thanesgroup.lgs.data.viewModel.DataStoreViewModelFactory
@@ -43,8 +43,11 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
 
   val dispenseViewModel: DispenseViewModel = viewModel(
     factory = DispenseViewModelFactory(
-      SettingsRepository.getInstance(context),
-      application
+      settingsRepository = SettingsRepository.getInstance(context),
+      context = context,
+      authViewModel = authViewModel,
+      navController = navController,
+      application = application
     )
   )
 
