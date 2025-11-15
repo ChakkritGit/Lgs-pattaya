@@ -127,7 +127,7 @@ fun MenuScreen(
           .padding(horizontal = 56.dp)
           .border(
             width = 1.dp,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.outline,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),

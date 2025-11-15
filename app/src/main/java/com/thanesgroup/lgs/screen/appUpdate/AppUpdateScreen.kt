@@ -22,11 +22,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Divider
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -164,10 +164,9 @@ fun AppUpdateScreen(
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.labelLarge,
               )
-              Spacer(modifier = Modifier.height(16.dp))
+              Spacer(modifier = Modifier.height(24.dp))
               Button(
                 onClick = { updateViewModel.checkForUpdate() },
-                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = LgsBlue)
               ) {
                 Text("ลองอีกครั้ง", color = Color.White)
@@ -219,7 +218,7 @@ private fun SoftwareUpdateInfo(
       )
       Spacer(Modifier.height(8.dp))
       Text("LGS ${updateInfo.versionName}", style = MaterialTheme.typography.titleMedium)
-      Divider(
+      HorizontalDivider(
         modifier = Modifier.padding(vertical = 16.dp),
         color = MaterialTheme.colorScheme.outlineVariant
       )
@@ -276,7 +275,7 @@ private fun SoftwareUpdateInfo(
           }
         }
       }
-      Divider(
+      HorizontalDivider(
         modifier = Modifier.padding(vertical = 12.dp),
         color = MaterialTheme.colorScheme.outlineVariant
       )
@@ -331,7 +330,7 @@ private fun DownloadProgress(progress: Int) {
       strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
       gapSize = 6.dp
     )
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(10.dp))
     Text("กำลังดาวน์โหลด... $progress%", style = MaterialTheme.typography.labelLarge)
   }
 }
