@@ -71,8 +71,6 @@ import com.thanesgroup.lgs.data.model.TokenDecodeModel
 import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
-import com.thanesgroup.lgs.data.viewModel.TokenHolder
-import com.thanesgroup.lgs.navigation.Routes
 import com.thanesgroup.lgs.ui.component.BarcodeScanner
 import com.thanesgroup.lgs.ui.component.keyboard.Keyboard
 import com.thanesgroup.lgs.ui.theme.LgsBlue
@@ -107,6 +105,7 @@ fun DispenseScreen(
   var user2: String? by remember { mutableStateOf(null) }
   var isCheckingLoading by remember { mutableStateOf(false) }
   var isVerifyLoading by remember { mutableStateOf(false) }
+  var isReceived by remember { mutableStateOf(false) }
   var username by rememberSaveable { mutableStateOf("") }
   var userpassword by rememberSaveable { mutableStateOf("") }
   val focusRequesterPassword = remember { FocusRequester() }
@@ -197,11 +196,19 @@ fun DispenseScreen(
         } else {
           if (dispenseViewModel.isReceiveLoading) return@launch
 
-          dispenseViewModel.handleReceive(
+          isReceived = dispenseViewModel.handleReceive(
             orderLabel?.f_itemlocationno,
             orderLabel?.f_referenceCode,
             user2
           )
+
+          if (isReceived) {
+            openDialog = false
+            isReceived = false
+            orderLabel = null
+
+            dispenseViewModel.handleDispense(dispenseViewModel.dispenseData?.hn ?: "")
+          }
         }
       }
     }
@@ -490,8 +497,8 @@ fun DispenseScreen(
     ) {
       Card(
         modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 32.dp)
+          .fillMaxWidth(0.3f)
+          .height(100.dp)
           .border(
             width = 1.dp,
             color = MaterialTheme.colorScheme.outline,
@@ -501,9 +508,11 @@ fun DispenseScreen(
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
       ) {
-        Column(
-          modifier = Modifier.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
-          horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+          modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
+          contentAlignment = Alignment.Center
         ) {
           CircularProgressIndicator(
             modifier = Modifier.size(24.dp),
@@ -627,11 +636,19 @@ fun DispenseScreen(
             Button(
               onClick = {
                 scope.launch {
-                  dispenseViewModel.handleReceive(
+                  isReceived = dispenseViewModel.handleReceive(
                     orderLabel?.f_itemlocationno,
                     orderLabel?.f_referenceCode,
                     user2
                   )
+
+                  if (isReceived) {
+                    openDialog = false
+                    isReceived = false
+                    orderLabel = null
+
+                    dispenseViewModel.handleDispense(dispenseViewModel.dispenseData?.hn ?: "")
+                  }
                 }
               },
               colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
@@ -639,12 +656,18 @@ fun DispenseScreen(
               modifier = Modifier.weight(1f),
               enabled = !dispenseViewModel.isReceiveLoading
             ) {
-              Text(
-                text = "ยืนยัน",
-                fontFamily = ibmpiexsansthailooped,
-                style = MaterialTheme.typography.labelLarge,
-                color = Color.White
-              )
+              if (!dispenseViewModel.isReceiveLoading) {
+                Text(
+                  text = "ยืนยัน",
+                  fontFamily = ibmpiexsansthailooped,
+                  style = MaterialTheme.typography.labelLarge,
+                  color = Color.White
+                )
+              } else {
+                CircularProgressIndicator(
+                  modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
+                )
+              }
             }
           }
         }
@@ -735,19 +758,19 @@ private fun DispenseListScreen(
       PatientInfoSection(data = data)
 
       Spacer(modifier = Modifier.height(14.dp))
-
-      val dispensedCount = data.orders.count { it.f_dispensestatus == "1" }
-      val totalCount = data.orders.size
-      Text(
-        text = "จัดยาแล้ว ($dispensedCount/$totalCount)",
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
-        color = if (dispensedCount == totalCount) LgsGreen else MaterialTheme.colorScheme.onSurface,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth()
-      )
-
-      Spacer(modifier = Modifier.height(16.dp))
+//
+//      val dispensedCount = data.orders.count { it.f_dispensestatus == "1" }
+//      val totalCount = data.orders.size
+//      Text(
+//        text = "จัดยาแล้ว ($dispensedCount/$totalCount)",
+//        style = MaterialTheme.typography.titleMedium,
+//        fontWeight = FontWeight.Bold,
+//        color = if (dispensedCount == totalCount) LgsGreen else MaterialTheme.colorScheme.onSurface,
+//        textAlign = TextAlign.Center,
+//        modifier = Modifier.fillMaxWidth()
+//      )
+//
+//      Spacer(modifier = Modifier.height(16.dp))
 
       LazyColumn(
         modifier = Modifier.weight(1f),

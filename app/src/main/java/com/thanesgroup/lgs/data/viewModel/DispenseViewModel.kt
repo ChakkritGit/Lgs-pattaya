@@ -48,8 +48,13 @@ class DispenseViewModel(
         if (response.isSuccessful) {
           val data = response.body()?.data
           if (data != null) {
-            dispenseData = data
-            settingsRepository.saveHn(hn)
+            if (data.orders.isNotEmpty()) {
+              dispenseData = data
+              settingsRepository.saveHn(hn)
+            } else {
+              dispenseData = null
+              settingsRepository.clearHn()
+            }
           } else {
             settingsRepository.clearHn()
           }
