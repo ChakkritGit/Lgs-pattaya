@@ -1,5 +1,6 @@
 package com.thanesgroup.lgs.navigation
 
+import android.app.Application
 import android.content.Context
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
@@ -18,7 +19,12 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.thanesgroup.lgs.data.repository.SettingsRepository
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
+import com.thanesgroup.lgs.data.viewModel.DataStoreViewModel
+import com.thanesgroup.lgs.data.viewModel.DataStoreViewModelFactory
+import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
+import com.thanesgroup.lgs.data.viewModel.DispenseViewModelFactory
 import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
 import com.thanesgroup.lgs.screen.auth.LoginScreen
 import com.thanesgroup.lgs.screen.auth.LoginWithCodeScreen
@@ -28,12 +34,35 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController, context: Context) {
+  val application = context.applicationContext as Application
   val authViewModel: AuthViewModel = viewModel()
   val updateViewModel: UpdateViewModel = viewModel()
+  val dataStoreViewModel: DataStoreViewModel = viewModel(
+    factory = DataStoreViewModelFactory(SettingsRepository.getInstance(context))
+  )
+
+  val dispenseViewModel: DispenseViewModel = viewModel(
+    factory = DispenseViewModelFactory(
+      SettingsRepository.getInstance(context),
+      application
+    )
+  )
+
   val authState by authViewModel.authState.collectAsState()
+  val storedHn by dataStoreViewModel.hn.collectAsState()
 
   LaunchedEffect(Unit) {
     authViewModel.initializeAuth(context)
+  }
+
+  LaunchedEffect(Unit) {
+    updateViewModel.checkForUpdate()
+  }
+
+  LaunchedEffect(storedHn) {
+    if (dispenseViewModel.dispenseData == null && storedHn.isNotEmpty() && storedHn != "Loading...") {
+      dispenseViewModel.handleDispense(storedHn)
+    }
   }
 
   val transitionSpec: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
@@ -112,7 +141,8 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
         authViewModel = authViewModel,
         authState = authState,
         mainNavController = navController,
-        updateViewModel = updateViewModel
+        updateViewModel = updateViewModel,
+        dispenseViewModel = dispenseViewModel
       )
     }
   }

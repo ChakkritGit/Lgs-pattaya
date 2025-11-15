@@ -36,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
+import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
 import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
 import com.thanesgroup.lgs.navigation.BottomNavDestination
 import com.thanesgroup.lgs.navigation.DISPENSE_GRAPH_ROUTE
@@ -52,6 +53,7 @@ fun MainScreen(
   authState: AuthState,
   authViewModel: AuthViewModel,
   updateViewModel: UpdateViewModel,
+  dispenseViewModel: DispenseViewModel,
   context: Context
 ) {
   val navController = rememberNavController()
@@ -141,11 +143,7 @@ fun MainScreen(
       enterTransition = transitionSpec,
       exitTransition = exitSpec,
       popEnterTransition = popEnterSpec,
-      popExitTransition = popExitSpec,
-//      enterTransition = { EnterTransition.None },
-//      exitTransition = { ExitTransition.None },
-//      popEnterTransition = { EnterTransition.None },
-//      popExitTransition = { ExitTransition.None }
+      popExitTransition = popExitSpec
     ) {
       navigation(
         startDestination = BottomNavDestination.DISPENSE.startDestinationRoute,
@@ -154,6 +152,7 @@ fun MainScreen(
         composable(route = BottomNavDestination.DISPENSE.startDestinationRoute) {
           DispenseScreen(
             contentPadding = innerPadding,
+            dispenseViewModel = dispenseViewModel,
             context = context
           )
         }

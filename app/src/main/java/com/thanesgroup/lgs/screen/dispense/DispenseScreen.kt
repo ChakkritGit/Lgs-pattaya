@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,17 +30,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,98 +41,42 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.thanesgroup.lgs.R
 import com.thanesgroup.lgs.data.model.DispenseModel
 import com.thanesgroup.lgs.data.model.OrderModel
-import com.thanesgroup.lgs.data.repositories.ApiRepository
-import com.thanesgroup.lgs.data.repository.SettingsRepository
-import com.thanesgroup.lgs.data.viewModel.DataStoreViewModel
-import com.thanesgroup.lgs.data.viewModel.DataStoreViewModelFactory
+import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
 import com.thanesgroup.lgs.ui.component.BarcodeScanner
 import com.thanesgroup.lgs.ui.theme.LgsBlue
-import com.thanesgroup.lgs.util.parseErrorMessage
-import com.thanesgroup.lgs.util.parseExceptionMessage
-import kotlinx.coroutines.launch
 
 @Composable
 fun DispenseScreen(
-  context: Context,
-  contentPadding: PaddingValues
+  dispenseViewModel: DispenseViewModel,
+  contentPadding: PaddingValues,
+  context: Context
 ) {
   val scope = rememberCoroutineScope()
-  var errorMessage by remember { mutableStateOf("") }
-
-  var dispenseData by remember { mutableStateOf<DispenseModel?>(null) }
-  var isLoading by remember { mutableStateOf(false) }
-
-  val dataStoreViewModel: DataStoreViewModel = viewModel(
-    factory = DataStoreViewModelFactory(SettingsRepository.getInstance(context))
-  )
-
-  val storedHn by dataStoreViewModel.hn.collectAsState()
-
-  fun handleDispense(hn: String) {
-    if (hn.isEmpty()) return
-    isLoading = true
-    scope.launch {
-      try {
-        val response = ApiRepository.dispense(hn)
-
-        if (response.isSuccessful) {
-          val data = response.body()?.data
-          if (data != null) {
-            dispenseData = data
-            dataStoreViewModel.saveHn(hn)
-          } else {
-            errorMessage = "ไม่พบข้อมูลใบสั่งยา"
-            dispenseData = null
-            dataStoreViewModel.clearHn()
-          }
-        } else {
-          val errorJson = response.errorBody()?.string()
-          errorMessage = parseErrorMessage(response.code(), errorJson)
-          dispenseData = null
-          dataStoreViewModel.clearHn()
-        }
-      } catch (e: Exception) {
-        errorMessage = parseExceptionMessage(e)
-        dispenseData = null
-        dataStoreViewModel.clearHn()
-      } finally {
-        isLoading = false
-      }
-    }
-  }
 
   fun handleReceive(orderCode: String) {
     // เปิดไฟจัดยา
   }
 
-  LaunchedEffect(errorMessage) {
-    if (errorMessage.isNotEmpty()) {
-      Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-      errorMessage = ""
-    }
-  }
-
-  LaunchedEffect(storedHn) {
-    if (dispenseData == null && storedHn.isNotEmpty() && storedHn != "Loading...") {
-      handleDispense(storedHn)
+  LaunchedEffect(dispenseViewModel.errorMessage) {
+    if (dispenseViewModel.errorMessage.isNotEmpty()) {
+      Toast.makeText(context, dispenseViewModel.errorMessage, Toast.LENGTH_SHORT).show()
+      dispenseViewModel.errorMessage = ""
     }
   }
 
   BarcodeScanner { scannedCode ->
-    if (dispenseData == null) {
-      handleDispense(scannedCode)
+    if (dispenseViewModel.dispenseData == null) {
+      dispenseViewModel.handleDispense(scannedCode)
     } else {
       // สแกนเปิดไฟจัดยา
 //       handleReceive(scannedCode)
     }
   }
 
-  if (isLoading) {
+  if (dispenseViewModel.isLoading) {
     Box(
       modifier = Modifier
         .fillMaxSize(),
@@ -152,17 +88,17 @@ fun DispenseScreen(
         strokeWidth = 2.dp
       )
     }
-  } else if (dispenseData == null) {
+  } else if (dispenseViewModel.dispenseData == null) {
     ScanPromptUI(contentPadding)
   } else {
     Box(
       modifier = Modifier.padding(contentPadding)
     ) {
       DispenseListScreen(
-        data = dispenseData!!,
+        data = dispenseViewModel.dispenseData!!,
         onClear = {
-          dispenseData = null
-          dataStoreViewModel.clearHn()
+          dispenseViewModel.dispenseData = null
+          dispenseViewModel.clearDispenseData()
         }
       )
     }

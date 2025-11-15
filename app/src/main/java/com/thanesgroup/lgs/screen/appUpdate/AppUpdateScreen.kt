@@ -76,8 +76,14 @@ fun AppUpdateScreen(
     updateViewModel.checkForUpdate()
   }
 
-  LaunchedEffect(Unit) {
-    updateViewModel.checkForUpdate()
+  LaunchedEffect(updateState) {
+    when (updateState) {
+      is UpdateState.Idle -> {
+        updateViewModel.checkForUpdate()
+      }
+
+      else -> {}
+    }
   }
 
   Scaffold(
@@ -120,7 +126,7 @@ fun AppUpdateScreen(
       modifier = Modifier
         .padding(innerPadding)
         .fillMaxSize()
-        .padding(16.dp)
+        .padding(horizontal = 16.dp)
     ) {
       when (updateState) {
         is UpdateState.Checking -> {
@@ -213,7 +219,10 @@ private fun SoftwareUpdateInfo(
       )
       Spacer(Modifier.height(8.dp))
       Text("LGS ${updateInfo.versionName}", style = MaterialTheme.typography.titleMedium)
-      Divider(modifier = Modifier.padding(vertical = 16.dp))
+      Divider(
+        modifier = Modifier.padding(vertical = 16.dp),
+        color = MaterialTheme.colorScheme.outlineVariant
+      )
 
       Text(
         "มีอะไรใหม่", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold
@@ -235,7 +244,7 @@ private fun SoftwareUpdateInfo(
       Box(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(vertical = 16.dp),
+          .padding(top = 18.dp),
         contentAlignment = Alignment.Center
       ) {
         when (updateState) {
@@ -267,7 +276,10 @@ private fun SoftwareUpdateInfo(
           }
         }
       }
-      Divider(modifier = Modifier.padding(vertical = 12.dp))
+      Divider(
+        modifier = Modifier.padding(vertical = 12.dp),
+        color = MaterialTheme.colorScheme.outlineVariant
+      )
     }
   }
 }
@@ -317,7 +329,7 @@ private fun DownloadProgress(progress: Int) {
       trackColor = Blue80,
       color = LgsBlue,
       strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
-      gapSize = 8.dp
+      gapSize = 6.dp
     )
     Spacer(modifier = Modifier.height(8.dp))
     Text("กำลังดาวน์โหลด... $progress%", style = MaterialTheme.typography.labelLarge)
