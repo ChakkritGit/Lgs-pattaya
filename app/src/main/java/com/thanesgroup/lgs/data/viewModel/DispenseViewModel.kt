@@ -32,6 +32,9 @@ class DispenseViewModel(
   var isLoading by mutableStateOf(false)
     private set
 
+  var isReceiveLoading by mutableStateOf(false)
+    private set
+
   var errorMessage by mutableStateOf("")
 
   fun handleDispense(hn: String) {
@@ -122,6 +125,34 @@ class DispenseViewModel(
 
       errorMessage = parseExceptionMessage(e)
       null
+    }
+  }
+
+  suspend fun handleReceive(binLo: String?, reference: String?, user: String?): Boolean {
+    isReceiveLoading = true
+    return try {
+      val response = ApiRepository.receiveOrder(binLo, reference, user)
+
+      if (response.isSuccessful) {
+        val data = response.body()?.data
+        data != null
+      } else {
+        val errorJson = response.errorBody()?.string()
+        errorMessage = parseErrorMessage(response.code(), errorJson)
+
+        if (response.code() == 401) {
+          handleUnauthorizedError(response.code(), context, authViewModel, navController)
+        }
+        false
+      }
+    } catch (e: Exception) {
+      if (e is retrofit2.HttpException && e.code() == 401) {
+        handleUnauthorizedError(e.code(), context, authViewModel, navController)
+      }
+      errorMessage = parseExceptionMessage(e)
+      false
+    } finally {
+      isReceiveLoading = false
     }
   }
 

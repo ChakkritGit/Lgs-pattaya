@@ -85,7 +85,7 @@ fun LoginScreen(
   val hideKeyboard = Keyboard.hideKeyboard()
 
   val completeFieldMessage = "กรุณากรอกข้อมูลให้ครบ!"
-  val userDataInCompleteMessage = "ข้อมูลผู้ใช้ไม่สมบูรณ์!"
+  val userDataInCompleteMessage = "เกิดข้อผิดพลาด!"
 
   fun handleLogin() {
     errorMessage = ""

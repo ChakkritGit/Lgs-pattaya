@@ -10,6 +10,10 @@ data class CheckDrugModel(
   val isNarcotic: Boolean
 )
 
+data class ReceiveOrderModel(
+  val message: Boolean
+)
+
 data class LabelModel(
   val f_orderitemname: String,
   val f_orderqty: String,

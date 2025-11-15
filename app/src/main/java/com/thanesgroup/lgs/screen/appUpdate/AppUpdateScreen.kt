@@ -267,7 +267,7 @@ private fun SoftwareUpdateInfo(
               modifier = Modifier.fillMaxWidth(),
               colors = ButtonDefaults.buttonColors(containerColor = LgsBlue)
             ) {
-              Text("ติดตั้ง", color = Color.White)
+              Text("ติดตั้งตอนนี้", color = Color.White)
             }
           }
 

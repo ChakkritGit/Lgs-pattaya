@@ -24,6 +24,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -32,6 +34,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,14 +43,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,9 +68,13 @@ import com.thanesgroup.lgs.data.model.DispenseModel
 import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.model.OrderModel
 import com.thanesgroup.lgs.data.model.TokenDecodeModel
+import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
+import com.thanesgroup.lgs.data.viewModel.TokenHolder
+import com.thanesgroup.lgs.navigation.Routes
 import com.thanesgroup.lgs.ui.component.BarcodeScanner
+import com.thanesgroup.lgs.ui.component.keyboard.Keyboard
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 import com.thanesgroup.lgs.ui.theme.LgsGreen
 import com.thanesgroup.lgs.ui.theme.LightBlue
@@ -68,6 +83,8 @@ import com.thanesgroup.lgs.ui.theme.LightRed
 import com.thanesgroup.lgs.ui.theme.LightYellow
 import com.thanesgroup.lgs.ui.theme.ibmpiexsansthailooped
 import com.thanesgroup.lgs.util.jwtDecode
+import com.thanesgroup.lgs.util.parseErrorMessage
+import com.thanesgroup.lgs.util.parseExceptionMessage
 import com.thanesgroup.lgs.util.updateStatusBarColor
 import kotlinx.coroutines.launch
 
@@ -78,11 +95,59 @@ fun DispenseScreen(
   contentPadding: PaddingValues,
   context: Context
 ) {
-  val scope = rememberCoroutineScope()
-  val payload = jwtDecode<TokenDecodeModel>(authState.token)
   val activity = LocalContext.current as Activity
+  val scope = rememberCoroutineScope()
+  val keyboardController = LocalSoftwareKeyboardController.current
+  val hideKeyboard = Keyboard.hideKeyboard()
+  val payload = jwtDecode<TokenDecodeModel>(authState.token)
   var orderLabel by remember { mutableStateOf<LabelModel?>(null) }
   var openDialog by remember { mutableStateOf(false) }
+  var openUserVerifyDialog by remember { mutableStateOf(false) }
+  var isUserVerified by remember { mutableStateOf(false) }
+  var user2: String? by remember { mutableStateOf(null) }
+  var isCheckingLoading by remember { mutableStateOf(false) }
+  var isVerifyLoading by remember { mutableStateOf(false) }
+  var username by rememberSaveable { mutableStateOf("") }
+  var userpassword by rememberSaveable { mutableStateOf("") }
+  val focusRequesterPassword = remember { FocusRequester() }
+
+  fun handleUserVerify() {
+    dispenseViewModel.errorMessage = ""
+    isVerifyLoading = true
+
+    scope.launch {
+      if (username.isEmpty() || userpassword.isEmpty()) {
+        dispenseViewModel.errorMessage = "กรุณากรอกข้อมูลให้ครบ"
+        isVerifyLoading = false
+        return@launch
+      }
+
+      try {
+        hideKeyboard()
+        val response = ApiRepository.login(username = username, userpassword = userpassword)
+
+        if (response.isSuccessful) {
+          val userData = response.body()?.data
+
+          if (userData != null) {
+            user2 = userData.name
+            isUserVerified = true
+          } else {
+            dispenseViewModel.errorMessage = "เกิดข้อผิดพลาด"
+          }
+        } else {
+          val errorJson = response.errorBody()?.string()
+          val message = parseErrorMessage(response.code(), errorJson)
+          dispenseViewModel.errorMessage = message
+        }
+      } catch (e: Exception) {
+        dispenseViewModel.errorMessage = parseExceptionMessage(e)
+      } finally {
+        isVerifyLoading = false
+        openUserVerifyDialog = false
+      }
+    }
+  }
 
   LaunchedEffect(payload, dispenseViewModel.dispenseData) {
     if (payload != null && dispenseViewModel.dispenseData != null) {
@@ -111,14 +176,32 @@ fun DispenseScreen(
       dispenseViewModel.handleDispense(scannedCode)
     } else {
       scope.launch {
-        val isChecked = dispenseViewModel.handleCheckNarcotic(scannedCode)
+        if (orderLabel == null) {
+          if (isCheckingLoading) return@launch
 
-        if (!isChecked) {
-          val hn = dispenseViewModel.dispenseData!!.hn
-          orderLabel = dispenseViewModel.handleGetLabel(hn, scannedCode)
-          openDialog = true
+          isCheckingLoading = true
+          val isChecked = dispenseViewModel.handleCheckNarcotic(scannedCode)
+
+          if (!isChecked) {
+            val hn = dispenseViewModel.dispenseData!!.hn
+            orderLabel = dispenseViewModel.handleGetLabel(hn, scannedCode)
+            isCheckingLoading = false
+            openDialog = true
+          } else {
+            isCheckingLoading = false
+
+            if (!isUserVerified) {
+              openUserVerifyDialog = true
+            }
+          }
         } else {
+          if (dispenseViewModel.isReceiveLoading) return@launch
 
+          dispenseViewModel.handleReceive(
+            orderLabel?.f_itemlocationno,
+            orderLabel?.f_referenceCode,
+            user2
+          )
         }
       }
     }
@@ -218,6 +301,220 @@ fun DispenseScreen(
     }
   }
 
+  if (openUserVerifyDialog) {
+    Dialog(
+      onDismissRequest = { },
+      properties = DialogProperties(
+        dismissOnBackPress = false,
+        dismissOnClickOutside = false,
+        usePlatformDefaultWidth = false
+      )
+    ) {
+      Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 32.dp)
+          .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+            shape = RoundedCornerShape(34.dp)
+          ),
+        shape = RoundedCornerShape(34.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+      ) {
+        Column(
+          modifier = Modifier.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          Text(
+            text = "ยืนยันตัวตน",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge
+          )
+          Spacer(modifier = Modifier.height(4.dp))
+          Text(
+            text = "Light Guiding Station System",
+            color = Color.Gray,
+            style = MaterialTheme.typography.titleSmall
+          )
+          Spacer(modifier = Modifier.height(35.dp))
+
+          OutlinedTextField(
+            value = username,
+            onValueChange = { username = it },
+            modifier = Modifier
+              .fillMaxWidth(),
+            label = { Text("ชื่อผู้ใช้") },
+            leadingIcon = {
+              Icon(
+                painter = painterResource(R.drawable.account_circle_24px),
+                contentDescription = "account_circle_24px"
+              )
+            },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+              focusedBorderColor = LgsBlue,
+              focusedLabelColor = LgsBlue,
+              focusedLeadingIconColor = LgsBlue,
+              unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+            ),
+            keyboardActions = KeyboardActions(
+              onNext = {
+                focusRequesterPassword.requestFocus()
+              }),
+            keyboardOptions = KeyboardOptions.Default.copy(
+              imeAction = ImeAction.Next
+            ),
+            shape = CircleShape
+          )
+          Spacer(modifier = Modifier.height(16.dp))
+
+          OutlinedTextField(
+            value = userpassword,
+            onValueChange = { userpassword = it },
+            modifier = Modifier
+              .fillMaxWidth()
+              .focusRequester(focusRequesterPassword),
+            label = { Text("รหัสผ่าน") },
+            leadingIcon = {
+              Icon(
+                painter = painterResource(R.drawable.password_24px),
+                contentDescription = "account_circle_24px"
+              )
+            },
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+              focusedBorderColor = LgsBlue,
+              focusedLabelColor = LgsBlue,
+              focusedLeadingIconColor = LgsBlue,
+              unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+            ),
+            keyboardActions = KeyboardActions(
+              onDone = {
+                keyboardController?.hide()
+                handleUserVerify()
+              }),
+            keyboardOptions = KeyboardOptions(
+              keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
+            ),
+            shape = CircleShape,
+            visualTransformation = PasswordVisualTransformation()
+
+          )
+          Spacer(modifier = Modifier.height(32.dp))
+
+          Button(
+            onClick = {
+              if (isVerifyLoading) return@Button
+              handleUserVerify()
+            },
+            modifier = Modifier
+              .fillMaxWidth(),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+            enabled = !isVerifyLoading
+          ) {
+            if (!isVerifyLoading) {
+              Text(
+                text = "เข้าสู่ระบบ",
+                fontWeight = FontWeight.Normal,
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium
+              )
+            } else {
+              CircularProgressIndicator(
+                modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
+              )
+            }
+          }
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Button(
+              onClick = { openUserVerifyDialog = false },
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            ) {
+              Text(
+                text = "ยกเลิก",
+                fontFamily = ibmpiexsansthailooped,
+                style = MaterialTheme.typography.labelLarge
+              )
+            }
+
+            Button(
+              onClick = {
+                scope.launch {
+                  dispenseViewModel.handleReceive(
+                    orderLabel?.f_itemlocationno,
+                    orderLabel?.f_referenceCode,
+                    user2
+                  )
+                }
+              },
+              colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              enabled = !dispenseViewModel.isReceiveLoading
+            ) {
+              Text(
+                text = "ยืนยัน",
+                fontFamily = ibmpiexsansthailooped,
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (isCheckingLoading) {
+    Dialog(
+      onDismissRequest = { },
+      properties = DialogProperties(
+        dismissOnBackPress = false,
+        dismissOnClickOutside = false,
+        usePlatformDefaultWidth = false
+      )
+    ) {
+      Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 32.dp)
+          .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+            shape = RoundedCornerShape(34.dp)
+          ),
+        shape = RoundedCornerShape(34.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+      ) {
+        Column(
+          modifier = Modifier.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          CircularProgressIndicator(
+            modifier = Modifier.size(24.dp),
+            color = LgsBlue,
+            strokeWidth = 2.dp
+          )
+        }
+      }
+    }
+  }
+
   if (openDialog && orderLabel != null) {
     Dialog(
       onDismissRequest = { },
@@ -241,8 +538,8 @@ fun DispenseScreen(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
       ) {
         Column(
-          modifier = Modifier.padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 10.dp),
-          horizontalAlignment = Alignment.Start
+          modifier = Modifier.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
         ) {
           Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -258,10 +555,12 @@ fun DispenseScreen(
             Text(
               text = "Scan ช่องยาเพื่อยืนยันการจัดยา",
               color = Color.Red,
-              style = MaterialTheme.typography.titleMedium,
+              style = MaterialTheme.typography.titleSmall,
               fontWeight = FontWeight.Bold
             )
           }
+
+          Spacer(modifier = Modifier.height(16.dp))
 
           Column(
             modifier = Modifier
@@ -272,12 +571,12 @@ fun DispenseScreen(
             Row {
               Text(
                 text = "BinLo : ",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
               )
               Text(
                 text = orderLabel?.f_itemlocationno ?: "",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.Red
               )
@@ -326,10 +625,19 @@ fun DispenseScreen(
 //            }
 
             Button(
-              onClick = { },
+              onClick = {
+                scope.launch {
+                  dispenseViewModel.handleReceive(
+                    orderLabel?.f_itemlocationno,
+                    orderLabel?.f_referenceCode,
+                    user2
+                  )
+                }
+              },
               colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
               shape = CircleShape,
-              modifier = Modifier.weight(1f)
+              modifier = Modifier.weight(1f),
+              enabled = !dispenseViewModel.isReceiveLoading
             ) {
               Text(
                 text = "ยืนยัน",
