@@ -58,7 +58,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -84,6 +83,7 @@ import com.thanesgroup.lgs.util.jwtDecode
 import com.thanesgroup.lgs.util.parseErrorMessage
 import com.thanesgroup.lgs.util.parseExceptionMessage
 import com.thanesgroup.lgs.util.updateStatusBarColor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -207,6 +207,8 @@ fun DispenseScreen(
             isReceived = false
             orderLabel = null
 
+            delay(500)
+
             dispenseViewModel.handleDispense(dispenseViewModel.dispenseData?.hn ?: "")
           }
         }
@@ -319,8 +321,7 @@ fun DispenseScreen(
     ) {
       Card(
         modifier = Modifier
-          .fillMaxWidth()
-          .padding(horizontal = 32.dp)
+          .fillMaxWidth(0.85f)
           .border(
             width = 1.dp,
             color = MaterialTheme.colorScheme.outline,
@@ -341,11 +342,12 @@ fun DispenseScreen(
           )
           Spacer(modifier = Modifier.height(4.dp))
           Text(
-            text = "Light Guiding Station System",
+            text = "สำหรับการจัดยาชนิดพิเศษ",
             color = Color.Gray,
             style = MaterialTheme.typography.titleSmall
           )
-          Spacer(modifier = Modifier.height(35.dp))
+
+          Spacer(modifier = Modifier.height(24.dp))
 
           OutlinedTextField(
             value = username,
@@ -409,34 +411,7 @@ fun DispenseScreen(
             visualTransformation = PasswordVisualTransformation()
 
           )
-          Spacer(modifier = Modifier.height(32.dp))
-
-          Button(
-            onClick = {
-              if (isVerifyLoading) return@Button
-              handleUserVerify()
-            },
-            modifier = Modifier
-              .fillMaxWidth(),
-            shape = CircleShape,
-            colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
-            enabled = !isVerifyLoading
-          ) {
-            if (!isVerifyLoading) {
-              Text(
-                text = "เข้าสู่ระบบ",
-                fontWeight = FontWeight.Normal,
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium
-              )
-            } else {
-              CircularProgressIndicator(
-                modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
-              )
-            }
-          }
-
-          Spacer(modifier = Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(28.dp))
 
           Row(
             modifier = Modifier.fillMaxWidth(),
@@ -460,25 +435,26 @@ fun DispenseScreen(
 
             Button(
               onClick = {
-                scope.launch {
-                  dispenseViewModel.handleReceive(
-                    orderLabel?.f_itemlocationno,
-                    orderLabel?.f_referenceCode,
-                    user2
-                  )
-                }
+                if (isVerifyLoading) return@Button
+                handleUserVerify()
               },
-              colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
-              shape = CircleShape,
               modifier = Modifier.weight(1f),
-              enabled = !dispenseViewModel.isReceiveLoading
+              shape = CircleShape,
+              colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+              enabled = !isVerifyLoading
             ) {
-              Text(
-                text = "ยืนยัน",
-                fontFamily = ibmpiexsansthailooped,
-                style = MaterialTheme.typography.labelLarge,
-                color = Color.White
-              )
+              if (!isVerifyLoading) {
+                Text(
+                  text = "ยืนยัน",
+                  fontWeight = FontWeight.Normal,
+                  color = Color.White,
+                  style = MaterialTheme.typography.titleMedium
+                )
+              } else {
+                CircularProgressIndicator(
+                  modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
+                )
+              }
             }
           }
         }
@@ -646,6 +622,8 @@ fun DispenseScreen(
                     openDialog = false
                     isReceived = false
                     orderLabel = null
+
+                    delay(500)
 
                     dispenseViewModel.handleDispense(dispenseViewModel.dispenseData?.hn ?: "")
                   }
