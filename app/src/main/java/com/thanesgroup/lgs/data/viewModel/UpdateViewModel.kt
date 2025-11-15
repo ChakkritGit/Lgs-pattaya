@@ -36,11 +36,11 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
   private val buildVersionName = BuildConfig.VERSION_NAME
 
   fun checkForUpdate() {
-    val useMockData = false
+    val useMockData = true
     viewModelScope.launch {
       _updateState.value = UpdateState.Checking
       _updateInfo.value = null
-//      kotlinx.coroutines.delay(1500)
+      kotlinx.coroutines.delay(1500)
 
       if (useMockData) {
         val mockUpdateInfo = UpdateInfo(

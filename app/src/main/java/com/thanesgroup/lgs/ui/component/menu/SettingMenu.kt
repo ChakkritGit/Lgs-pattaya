@@ -1,30 +1,38 @@
 package com.thanesgroup.lgs.ui.component.menu
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.thanesgroup.lgs.R
+import com.thanesgroup.lgs.data.viewModel.UpdateState
 
 @Composable
 fun SettingsMenuItem(
   @DrawableRes icon: Int,
   text: String,
-  onClick: () -> Unit
+  onClick: () -> Unit,
+  updateState: UpdateState
 ) {
+  val shouldShowBadge = updateState is UpdateState.UpdateAvailable
+
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -44,6 +52,20 @@ fun SettingsMenuItem(
       style = MaterialTheme.typography.bodyLarge,
       modifier = Modifier.weight(1f)
     )
+    if (shouldShowBadge) {
+      Box(
+        modifier = Modifier
+          .clip(CircleShape)
+          .background(Color.Red)
+      ) {
+        Text(
+          text = "New",
+          style = MaterialTheme.typography.labelSmall,
+          color = Color.White,
+          modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)
+        )
+      }
+    }
     Icon(
       painter = painterResource(R.drawable.chevron_right_24px),
       modifier = Modifier.size(24.dp),

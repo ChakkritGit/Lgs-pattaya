@@ -26,7 +26,6 @@ class DispenseViewModel(
 
   var errorMessage by mutableStateOf("")
 
-
   fun handleDispense(hn: String) {
     if (hn.isBlank()) return
     isLoading = true
@@ -57,6 +56,10 @@ class DispenseViewModel(
         isLoading = false
       }
     }
+  }
+
+  fun handleReceive(orderCode: String) {
+    // เปิดไฟจัดยา
   }
 
   fun clearDispenseData() {

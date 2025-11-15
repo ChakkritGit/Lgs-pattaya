@@ -1,6 +1,7 @@
 package com.thanesgroup.lgs.screen.dispense
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -33,7 +34,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,12 +54,6 @@ fun DispenseScreen(
   contentPadding: PaddingValues,
   context: Context
 ) {
-  val scope = rememberCoroutineScope()
-
-  fun handleReceive(orderCode: String) {
-    // เปิดไฟจัดยา
-  }
-
   LaunchedEffect(dispenseViewModel.errorMessage) {
     if (dispenseViewModel.errorMessage.isNotEmpty()) {
       Toast.makeText(context, dispenseViewModel.errorMessage, Toast.LENGTH_SHORT).show()
@@ -71,6 +65,10 @@ fun DispenseScreen(
     if (dispenseViewModel.dispenseData == null) {
       dispenseViewModel.handleDispense(scannedCode)
     } else {
+      val hn = dispenseViewModel.dispenseData!!.hn
+      if (hn != scannedCode) {
+        Log.d("HN", hn)
+      }
       // สแกนเปิดไฟจัดยา
 //       handleReceive(scannedCode)
     }

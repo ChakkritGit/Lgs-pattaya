@@ -42,6 +42,7 @@ import androidx.navigation.NavHostController
 import com.thanesgroup.lgs.R
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
+import com.thanesgroup.lgs.data.viewModel.UpdateState
 import com.thanesgroup.lgs.navigation.MenuSubRoutes
 import com.thanesgroup.lgs.navigation.Routes
 import com.thanesgroup.lgs.ui.component.menu.SettingsMenuItem
@@ -56,6 +57,7 @@ fun MenuScreen(
   mainNavController: NavHostController,
   navController: NavHostController,
   authState: AuthState,
+  updateState: UpdateState,
   authViewModel: AuthViewModel,
   context: Context
 ) {
@@ -92,6 +94,7 @@ fun MenuScreen(
       SettingsMenuItem(
         icon = R.drawable.autorenew_24px,
         text = "อัปเดตแอพ",
+        updateState = updateState,
         onClick = {
           navController.navigate(MenuSubRoutes.AppUpdate.route)
         }

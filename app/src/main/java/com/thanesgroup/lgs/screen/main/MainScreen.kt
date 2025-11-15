@@ -8,17 +8,18 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -37,6 +38,7 @@ import androidx.navigation.navigation
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
 import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
+import com.thanesgroup.lgs.data.viewModel.UpdateState
 import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
 import com.thanesgroup.lgs.navigation.BottomNavDestination
 import com.thanesgroup.lgs.navigation.DISPENSE_GRAPH_ROUTE
@@ -45,6 +47,7 @@ import com.thanesgroup.lgs.navigation.MenuSubRoutes
 import com.thanesgroup.lgs.screen.appUpdate.AppUpdateScreen
 import com.thanesgroup.lgs.screen.dispense.DispenseScreen
 import com.thanesgroup.lgs.screen.menu.MenuScreen
+import com.thanesgroup.lgs.ui.component.menu.BadgedIcon
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 
 @Composable
@@ -59,8 +62,8 @@ fun MainScreen(
   val navController = rememberNavController()
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navBackStackEntry?.destination
-
-  val isDarkTheme = isSystemInDarkTheme()
+  val updateState by updateViewModel.updateState.collectAsState()
+  var hasAcknowledgedUpdate by remember { mutableStateOf(false) }
 
   val transitionSpec: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
     slideInHorizontally(
@@ -110,9 +113,16 @@ fun MainScreen(
         BottomNavDestination.entries.forEach { destination ->
           val isSelected =
             currentDestination?.hierarchy?.any { it.route == destination.graphRoute } == true
+          val shouldShowBadge =
+            updateState is UpdateState.UpdateAvailable && !hasAcknowledgedUpdate && destination == BottomNavDestination.MENU
+
           NavigationBarItem(
             selected = isSelected,
             onClick = {
+              if (shouldShowBadge) {
+                hasAcknowledgedUpdate = true
+              }
+
               navController.navigate(destination.graphRoute) {
                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                 launchSingleTop = true
@@ -121,15 +131,17 @@ fun MainScreen(
             },
             icon = {
               val iconRes = if (isSelected) destination.selectedIcon else destination.unselectedIcon
-              Icon(
+              val iconColor =
+                if (isSelected) LgsBlue else MaterialTheme.colorScheme.onSurfaceVariant
+
+              BadgedIcon(
                 painter = painterResource(iconRes),
                 contentDescription = destination.label,
-                modifier = Modifier.size(28.dp)
+                showBadge = shouldShowBadge,
+                tint = iconColor
               )
             },
             colors = NavigationBarItemDefaults.colors(
-              selectedIconColor = LgsBlue,
-              unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
               indicatorColor = Color.Transparent
             )
           )
@@ -167,8 +179,7 @@ fun MainScreen(
             mainNavController = mainNavController,
             navController = navController,
             context = context,
-            authViewModel = authViewModel,
-            authState = authState
+            authViewModel = authViewModel, authState = authState, updateState = updateState
           )
         }
         composable(route = MenuSubRoutes.AppUpdate.route) {
