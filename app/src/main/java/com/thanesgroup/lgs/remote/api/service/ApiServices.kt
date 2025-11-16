@@ -56,7 +56,7 @@ interface ApiService {
     @Body request: ReceiveOrderRequest
   ): Response<ApiResponse<ReceiveOrderModel>>
 
-  @GET("v1/app/latest-update") // <<< แก้ไข Endpoint ให้ตรงกับ API ของคุณ
+  @GET("upload/version/current")
   suspend fun getLatestUpdateInfo(): Response<ApiResponse<UpdateInfo>>
 
   @GET

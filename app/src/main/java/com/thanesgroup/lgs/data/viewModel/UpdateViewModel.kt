@@ -36,44 +36,26 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
   private val buildVersionName = BuildConfig.VERSION_NAME
 
   fun checkForUpdate() {
-    val useMockData = false
     viewModelScope.launch {
       _updateState.value = UpdateState.Checking
       _updateInfo.value = null
-//      kotlinx.coroutines.delay(1500)
 
-      if (useMockData) {
-        val mockUpdateInfo = UpdateInfo(
-          versionCode = 2,
-          versionName = "2.0.0-mock",
-          apkUrl = "https://file.antutu.com/soft2/antutu-benchmark-v11-en.apk",
-          changelog = "- ฟีเจอร์ใหม่สุดเจ๋ง\n- แก้ไขบั๊กสำคัญ\n- ปรับปรุง UI ให้สวยงามขึ้น"
-        )
-        val currentVersionCode = BuildConfig.VERSION_CODE
-        if (mockUpdateInfo.versionCode > currentVersionCode) {
-          _updateInfo.value = mockUpdateInfo
-          _updateState.value = UpdateState.UpdateAvailable(mockUpdateInfo)
-        } else {
-          _updateState.value = UpdateState.Idle
-        }
-      } else {
-        try {
-          val response = ApiRepository.getUpdate()
-          if (response.isSuccessful && response.body() != null) {
-            val updateInfo = response.body()!!.data
-            val currentVersionCode = BuildConfig.VERSION_CODE
-            if (updateInfo.versionCode > currentVersionCode) {
-              _updateInfo.value = updateInfo
-              _updateState.value = UpdateState.UpdateAvailable(updateInfo)
-            } else {
-              _updateState.value = UpdateState.Idle
-            }
+      try {
+        val response = ApiRepository.getUpdate()
+        if (response.isSuccessful && response.body() != null) {
+          val updateInfo = response.body()!!.data
+          val currentVersionCode = BuildConfig.VERSION_CODE
+          if (updateInfo.version_code > currentVersionCode.toString()) {
+            _updateInfo.value = updateInfo
+            _updateState.value = UpdateState.UpdateAvailable(updateInfo)
           } else {
-            _updateState.value = UpdateState.Failed("ไม่สามารถตรวจสอบอัปเดตได้")
+            _updateState.value = UpdateState.Idle
           }
-        } catch (e: Exception) {
-          _updateState.value = UpdateState.Failed("เกิดข้อผิดพลาด: ${e.message}")
+        } else {
+          _updateState.value = UpdateState.Failed("ไม่สามารถตรวจสอบอัปเดตได้")
         }
+      } catch (e: Exception) {
+        _updateState.value = UpdateState.Failed("เกิดข้อผิดพลาด: ${e.message}")
       }
     }
   }
@@ -81,7 +63,7 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
   fun downloadUpdate(updateInfo: UpdateInfo) {
     viewModelScope.launch(Dispatchers.IO) {
       try {
-        val response = ApiRepository.downloadUpdateFile(updateInfo.apkUrl)
+        val response = ApiRepository.downloadUpdateFile(updateInfo.apk_url)
 
         if (response.isSuccessful) {
           val body = response.body() ?: throw Exception("Response body empty")

@@ -239,7 +239,7 @@ private fun SoftwareUpdateInfo(
         fontWeight = FontWeight.Bold
       )
       Spacer(Modifier.height(8.dp))
-      Text("LGS ${updateInfo.versionName}", style = MaterialTheme.typography.titleMedium)
+      Text("LGS ${updateInfo.version_name}", style = MaterialTheme.typography.titleMedium)
       HorizontalDivider(
         modifier = Modifier.padding(vertical = 16.dp),
         color = MaterialTheme.colorScheme.outlineVariant

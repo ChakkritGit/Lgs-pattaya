@@ -1,8 +1,11 @@
 package com.thanesgroup.lgs.data.model
 
 data class UpdateInfo(
-  val versionCode: Int,
-  val versionName: String,
-  val apkUrl: String,
-  val changelog: String
+  val id: Int,
+  val version_code: String,
+  val version_name: String,
+  val apk_url: String,
+  val changelog: String,
+  val created_at: String,
+  val updated_at: String
 )
