@@ -6,6 +6,7 @@ import com.thanesgroup.lgs.data.model.CheckUserModel
 import com.thanesgroup.lgs.data.model.DispenseModel
 import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.model.LoginRequest
+import com.thanesgroup.lgs.data.model.LogoutRequest
 import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.ReceiveOrderModel
 import com.thanesgroup.lgs.data.model.ReceiveOrderRequest
@@ -29,6 +30,11 @@ object ApiRepository {
 
   suspend fun checkTokenExpire(id: String): Response<ApiResponse<CheckUserModel>> {
     return RetrofitInstance.createApiWithAuth().checkTokenExpire(id)
+  }
+
+  suspend fun logout(color: String, id: String): Response<ApiResponse<String>> {
+    val request = LogoutRequest(color, id)
+    return RetrofitInstance.createApiWithAuth().logout(request)
   }
 
   suspend fun dispense(hn: String): Response<ApiResponse<DispenseModel>> {

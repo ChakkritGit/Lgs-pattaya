@@ -188,7 +188,10 @@ fun MainScreen(
             mainNavController = mainNavController,
             navController = navController,
             context = context,
-            authViewModel = authViewModel, authState = authState, updateState = updateState
+            authViewModel = authViewModel,
+            authState = authState,
+            updateState = updateState,
+            dispenseViewModel = dispenseViewModel
           )
         }
         composable(route = MenuSubRoutes.AppUpdate.route) {

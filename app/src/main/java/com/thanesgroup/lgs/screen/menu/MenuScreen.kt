@@ -40,8 +40,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavHostController
 import com.thanesgroup.lgs.R
+import com.thanesgroup.lgs.data.model.TokenDecodeModel
+import com.thanesgroup.lgs.data.repositories.SettingsRepository
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
+import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
 import com.thanesgroup.lgs.data.viewModel.UpdateState
 import com.thanesgroup.lgs.navigation.MenuSubRoutes
 import com.thanesgroup.lgs.navigation.Routes
@@ -49,6 +52,7 @@ import com.thanesgroup.lgs.ui.component.menu.SettingsMenuItem
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 import com.thanesgroup.lgs.ui.theme.Red40
 import com.thanesgroup.lgs.ui.theme.ibmpiexsansthailooped
+import com.thanesgroup.lgs.util.jwtDecode
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,10 +63,14 @@ fun MenuScreen(
   authState: AuthState,
   updateState: UpdateState,
   authViewModel: AuthViewModel,
+  dispenseViewModel: DispenseViewModel,
   context: Context
 ) {
   val scope = rememberCoroutineScope()
   var showLogoutDialog by remember { mutableStateOf(false) }
+  var openToConfirmCancelDispenseDialog by remember { mutableStateOf(false) }
+  val settings = remember { SettingsRepository.getInstance(context) }
+  val payload = jwtDecode<TokenDecodeModel>(authState.token)
 
   Scaffold(
     topBar = {
@@ -109,12 +117,118 @@ fun MenuScreen(
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(Red40),
         onClick = {
-          showLogoutDialog = true
+          if (dispenseViewModel.dispenseData != null) {
+            openToConfirmCancelDispenseDialog = true
+            showLogoutDialog = false
+          } else {
+            showLogoutDialog = true
+          }
         },
       ) {
         Text(
           text = "ออกจากระบบ", style = MaterialTheme.typography.bodyLarge, color = Color.White
         )
+      }
+    }
+  }
+
+  if (openToConfirmCancelDispenseDialog) {
+    Dialog(
+      onDismissRequest = { openToConfirmCancelDispenseDialog = false },
+      properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+      Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 56.dp)
+          .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+            shape = RoundedCornerShape(34.dp)
+          ),
+        shape = RoundedCornerShape(34.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+      ) {
+        Column(
+          modifier = Modifier.padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 10.dp),
+          horizontalAlignment = Alignment.Start
+        ) {
+          Column(
+            modifier = Modifier.padding(top = 12.dp, start = 10.dp, end = 10.dp),
+            horizontalAlignment = Alignment.Start
+          ) {
+            Text(
+              text = "ยังมีรายการจัดยาอยู่", style = MaterialTheme.typography.titleMedium,
+              fontWeight = FontWeight.Bold,
+              fontFamily = ibmpiexsansthailooped
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = "คุณต้องการยกเลิกการจัดยาใช่หรือไม่?",
+              style = MaterialTheme.typography.bodyMedium,
+              fontFamily = ibmpiexsansthailooped
+            )
+          }
+          Spacer(modifier = Modifier.height(12.dp))
+
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Button(
+              onClick = { openToConfirmCancelDispenseDialog = false },
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            ) {
+              Text(
+                text = "ปิด",
+                fontFamily = ibmpiexsansthailooped,
+                style = MaterialTheme.typography.labelLarge
+              )
+            }
+
+            Button(
+              onClick = {
+                if (payload == null) return@Button
+
+                scope.launch {
+                  val result = authViewModel.handleLogout(payload.color, payload.id)
+
+                  if (result == 200) {
+                    openToConfirmCancelDispenseDialog = false
+                    settings.clearHn()
+                    dispenseViewModel.dispenseData = null
+                    authViewModel.logout(context)
+                    mainNavController.navigate(Routes.Login.route) {
+                      popUpTo(0) { inclusive = true }
+                    }
+                  } else if (result == 401) {
+                    openToConfirmCancelDispenseDialog = false
+                    authViewModel.logout(context)
+                    mainNavController.navigate(Routes.Login.route) {
+                      popUpTo(0) { inclusive = true }
+                    }
+                  }
+                }
+              },
+              colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+              shape = CircleShape,
+              modifier = Modifier.weight(1f)
+            ) {
+              Text(
+                text = "ยืนยัน",
+                fontFamily = ibmpiexsansthailooped,
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White
+              )
+            }
+          }
+        }
       }
     }
   }
@@ -180,11 +294,23 @@ fun MenuScreen(
 
             Button(
               onClick = {
-                showLogoutDialog = false
+                if (payload == null) return@Button
+
                 scope.launch {
-                  authViewModel.logout(context)
-                  mainNavController.navigate(Routes.Login.route) {
-                    popUpTo(0) { inclusive = true }
+                  val result = authViewModel.handleLogout(payload.color, payload.id)
+
+                  if (result == 200) {
+                    showLogoutDialog = false
+                    authViewModel.logout(context)
+                    mainNavController.navigate(Routes.Login.route) {
+                      popUpTo(0) { inclusive = true }
+                    }
+                  } else if (result == 401) {
+                    showLogoutDialog = false
+                    authViewModel.logout(context)
+                    mainNavController.navigate(Routes.Login.route) {
+                      popUpTo(0) { inclusive = true }
+                    }
                   }
                 }
               },

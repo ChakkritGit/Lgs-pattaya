@@ -6,6 +6,7 @@ import com.thanesgroup.lgs.data.model.CheckUserModel
 import com.thanesgroup.lgs.data.model.DispenseModel
 import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.model.LoginRequest
+import com.thanesgroup.lgs.data.model.LogoutRequest
 import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.ReceiveOrderModel
 import com.thanesgroup.lgs.data.model.ReceiveOrderRequest
@@ -28,6 +29,9 @@ interface ApiService {
   @POST("auth/qrlogin")
   suspend fun qrLogin(@Body request: QrLoginRequest): Response<ApiResponse<UserAuthData>>
 
+  @POST("auth/logout")
+  suspend fun logout(@Body request: LogoutRequest): Response<ApiResponse<String>>
+
   @GET("user/{id}")
   suspend fun checkTokenExpire(@Path("id") id: String): Response<ApiResponse<CheckUserModel>>
 
@@ -41,7 +45,10 @@ interface ApiService {
   suspend fun checkDrug(@Path("drugcode") drugcode: String): Response<ApiResponse<CheckDrugModel>>
 
   @GET("prescription/label/{hn}/{drugcode}")
-  suspend fun getLabel(@Path("hn") hn: String, @Path("drugcode") drugcode: String): Response<ApiResponse<LabelModel>>
+  suspend fun getLabel(
+    @Path("hn") hn: String,
+    @Path("drugcode") drugcode: String
+  ): Response<ApiResponse<LabelModel>>
 
   @PATCH("prescription/receive/{binlo}")
   suspend fun receiveOrder(

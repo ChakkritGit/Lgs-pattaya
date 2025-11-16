@@ -1,10 +1,16 @@
 package com.thanesgroup.lgs.data.viewModel
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thanesgroup.lgs.data.model.UserAuthData
+import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.store.DataManager
+import com.thanesgroup.lgs.util.parseErrorMessage
+import com.thanesgroup.lgs.util.parseExceptionMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +32,9 @@ object TokenHolder {
 class AuthViewModel : ViewModel() {
   private val _authState = MutableStateFlow(AuthState())
   val authState: StateFlow<AuthState> = _authState.asStateFlow()
+  var isLoading by mutableStateOf(false)
+    private set
+  var errorMessage by mutableStateOf("")
 
   fun initializeAuth(context: Context) {
     viewModelScope.launch {
@@ -91,6 +100,33 @@ class AuthViewModel : ViewModel() {
           error = e.message
         )
       }
+    }
+  }
+
+  suspend fun handleLogout(color: String, id: String): Int {
+    if (color.isEmpty() && id.isEmpty()) return 404
+
+    return try {
+      val response = ApiRepository.logout(color, id)
+
+      if (response.isSuccessful) {
+        200
+      } else {
+        val errorJson = response.errorBody()?.string()
+        errorMessage = parseErrorMessage(response.code(), errorJson)
+
+        if (response.code() == 401) {
+          401
+        }
+        400
+      }
+    } catch (e: Exception) {
+      if (e is retrofit2.HttpException && e.code() == 401) {
+        401
+      }
+
+      errorMessage = parseExceptionMessage(e)
+      500
     }
   }
 

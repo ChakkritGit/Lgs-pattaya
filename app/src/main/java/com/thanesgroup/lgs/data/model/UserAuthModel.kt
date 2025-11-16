@@ -16,3 +16,4 @@ data class TokenDecodeModel(
 data class LoginRequest(val username: String, val password: String)
 data class QrLoginRequest(val username: String)
 data class ReceiveOrderRequest(val reference: String?, val user2: String?)
+data class LogoutRequest(val color: String, val id: String)
