@@ -88,21 +88,20 @@ fun AppUpdateScreen(
     refreshing = isLoading,
     onRefresh = {
       isLoading = true
-      when (updateState) {
-        is UpdateState.Idle -> {
-          updateViewModel.checkForUpdate()
-          isLoading = false
-        }
-
-        else -> {}
-      }
+      updateViewModel.checkForUpdate()
     }
   )
 
   LaunchedEffect(updateState) {
     when (updateState) {
-      is UpdateState.Idle -> {
-        updateViewModel.checkForUpdate()
+      is UpdateState.Checking -> {
+        isLoading = true
+      }
+
+      is UpdateState.Idle,
+      is UpdateState.Failed,
+      is UpdateState.UpdateAvailable -> {
+        isLoading = false
       }
 
       else -> {}
@@ -318,35 +317,39 @@ private fun LatestVersionUI(
       .fillMaxSize()
       .pullRefresh(pullRefreshState)
   ) {
-  Column(
-    verticalArrangement = Arrangement.spacedBy(2.dp),
-    horizontalAlignment = Alignment.CenterHorizontally
-  ) {
-    Icon(
-      painter = painterResource(id = R.drawable.check_circle_24px),
-      contentDescription = "Latest Version",
-      modifier = Modifier.size(64.dp)
-    )
-    Spacer(modifier = Modifier.height(16.dp))
-    Row(
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
-      verticalAlignment = Alignment.CenterVertically
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(top = 48.dp)
+        .verticalScroll(rememberScrollState()),
+      horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Text(
-        text = "LGS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold
+      Icon(
+        painter = painterResource(id = R.drawable.check_circle_24px),
+        contentDescription = "Latest Version",
+        modifier = Modifier.size(52.dp)
       )
+      Spacer(modifier = Modifier.height(12.dp))
+      Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Text(
+          text = "LGS", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold
+        )
+        Text(
+          text = updateViewModel.getBuildVersion(),
+          style = MaterialTheme.typography.titleMedium,
+          fontWeight = FontWeight.Bold
+        )
+      }
       Text(
-        text = updateViewModel.getBuildVersion(),
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold
+        text = "ซอฟต์แวร์ของคุณเป็นเวอร์ชันล่าสุด",
+        style = MaterialTheme.typography.labelLarge,
+        color = Color.Gray
       )
     }
-    Text(
-      text = "ซอฟต์แวร์ของคุณเป็นเวอร์ชันล่าสุด",
-      style = MaterialTheme.typography.labelLarge,
-      color = Color.Gray
-    )
-  }
+
     PullRefreshIndicator(
       refreshing = isLoading,
       state = pullRefreshState,

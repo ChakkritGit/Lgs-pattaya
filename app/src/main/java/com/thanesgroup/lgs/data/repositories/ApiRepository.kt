@@ -12,6 +12,7 @@ import com.thanesgroup.lgs.data.model.ReceiveOrderRequest
 import com.thanesgroup.lgs.data.model.UpdateInfo
 import com.thanesgroup.lgs.data.model.UserAuthData
 import com.thanesgroup.lgs.remote.config.RetrofitInstance
+import com.thanesgroup.lgs.remote.config.RetrofitOutSiteInstance
 import okhttp3.ResponseBody
 import retrofit2.Response
 
@@ -56,7 +57,7 @@ object ApiRepository {
   }
 
   suspend fun getUpdate(): Response<ApiResponse<UpdateInfo>> {
-    return RetrofitInstance.api.getLatestUpdateInfo()
+    return RetrofitOutSiteInstance.api.getLatestUpdateInfo()
   }
 
   suspend fun downloadUpdateFile(url: String): Response<ResponseBody> {

@@ -44,7 +44,7 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
 
       if (useMockData) {
         val mockUpdateInfo = UpdateInfo(
-          versionCode = 999,
+          versionCode = 2,
           versionName = "2.0.0-mock",
           apkUrl = "https://file.antutu.com/soft2/antutu-benchmark-v11-en.apk",
           changelog = "- ฟีเจอร์ใหม่สุดเจ๋ง\n- แก้ไขบั๊กสำคัญ\n- ปรับปรุง UI ให้สวยงามขึ้น"

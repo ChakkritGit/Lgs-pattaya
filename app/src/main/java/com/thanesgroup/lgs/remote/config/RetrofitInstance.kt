@@ -3,6 +3,7 @@ package com.thanesgroup.lgs.remote.config
 import com.thanesgroup.lgs.data.viewModel.TokenHolder
 import com.thanesgroup.lgs.remote.api.service.ApiService
 import com.thanesgroup.lgs.util.BaseUrl
+import com.thanesgroup.lgs.util.BaseUrlOutSite
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -26,6 +27,16 @@ object RetrofitInstance {
     return Retrofit.Builder()
       .baseUrl(BaseUrl)
       .client(client)
+      .addConverterFactory(GsonConverterFactory.create())
+      .build()
+      .create(ApiService::class.java)
+  }
+}
+
+object RetrofitOutSiteInstance {
+  val api: ApiService by lazy {
+    Retrofit.Builder()
+      .baseUrl(BaseUrlOutSite)
       .addConverterFactory(GsonConverterFactory.create())
       .build()
       .create(ApiService::class.java)
