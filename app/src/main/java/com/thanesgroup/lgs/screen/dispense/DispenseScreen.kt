@@ -27,6 +27,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -39,6 +43,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,12 +67,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.google.gson.Gson
 import com.thanesgroup.lgs.R
 import com.thanesgroup.lgs.data.model.DispenseModel
 import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.model.OrderModel
 import com.thanesgroup.lgs.data.model.TokenDecodeModel
 import com.thanesgroup.lgs.data.repositories.ApiRepository
+import com.thanesgroup.lgs.data.repositories.SettingsRepository
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
 import com.thanesgroup.lgs.ui.component.BarcodeScanner
@@ -86,6 +93,7 @@ import com.thanesgroup.lgs.util.updateStatusBarColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun DispenseScreen(
   dispenseViewModel: DispenseViewModel,
@@ -109,6 +117,19 @@ fun DispenseScreen(
   var username by rememberSaveable { mutableStateOf("") }
   var userpassword by rememberSaveable { mutableStateOf("") }
   val focusRequesterPassword = remember { FocusRequester() }
+  val hn = dispenseViewModel.dispenseData?.hn
+  val defaultColor = MaterialTheme.colorScheme.background
+  val settings = remember { SettingsRepository.getInstance(context) }
+  val savedOrderLabelJson by settings.orderLabelFlow.collectAsState(initial = null)
+
+  val pullRefreshState = rememberPullRefreshState(
+    refreshing = dispenseViewModel.isLoading,
+    onRefresh = {
+      if (hn != null && hn.isNotEmpty()) {
+        dispenseViewModel.handleReorderDispense(hn)
+      }
+    }
+  )
 
   fun handleUserVerify() {
     dispenseViewModel.errorMessage = ""
@@ -158,6 +179,15 @@ fun DispenseScreen(
       }
 
       updateStatusBarColor(activity, color)
+    } else {
+      updateStatusBarColor(activity, defaultColor)
+    }
+  }
+
+  LaunchedEffect(savedOrderLabelJson) {
+    if (!savedOrderLabelJson.isNullOrEmpty()) {
+      orderLabel = Gson().fromJson(savedOrderLabelJson, LabelModel::class.java)
+      openDialog = true
     }
   }
 
@@ -184,6 +214,9 @@ fun DispenseScreen(
           if (!isChecked) {
             val hn = dispenseViewModel.dispenseData!!.hn
             orderLabel = dispenseViewModel.handleGetLabel(hn, scannedCode)
+            scope.launch {
+              settings.saveOrderLabel(Gson().toJson(orderLabel))
+            }
             isCheckingLoading = false
             openDialog = true
           } else {
@@ -207,106 +240,131 @@ fun DispenseScreen(
             isReceived = false
             orderLabel = null
 
+            settings.clearOrderLabel()
+
             delay(500)
 
-            dispenseViewModel.handleDispense(dispenseViewModel.dispenseData?.hn ?: "")
+            dispenseViewModel.handleReorderDispense(dispenseViewModel.dispenseData?.hn ?: "")
           }
         }
       }
     }
   }
 
-  if (dispenseViewModel.isLoading) {
-    Box(
-      modifier = Modifier
-        .fillMaxSize(),
-      contentAlignment = Alignment.Center
-    ) {
-      CircularProgressIndicator(
-        modifier = Modifier.size(24.dp),
-        color = LgsBlue,
-        strokeWidth = 2.dp
-      )
-    }
-  } else if (dispenseViewModel.dispenseData == null) {
-    ScanPromptUI(contentPadding)
-  } else {
-    Box(
-      modifier = Modifier
-        .padding(contentPadding)
-        .background(
-          if (payload != null) {
-            if (payload.color == "1") {
-              LightRed
-            } else if (payload.color == "2") {
-              LightGreen
-            } else if (payload.color == "3") {
-              LightBlue
-            } else {
-              LightYellow
-            }
-          } else {
-            MaterialTheme.colorScheme.background
-          }
-        )
-    ) {
-      Column(
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .pullRefresh(pullRefreshState)
+  ) {
+
+    if (dispenseViewModel.isLoading && dispenseViewModel.dispenseData == null) {
+      Box(
         modifier = Modifier
-          .fillMaxSize()
+          .fillMaxSize(),
+        contentAlignment = Alignment.Center
       ) {
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .background(
-              if (payload != null) {
-                if (payload.color == "1") {
-                  LightRed
-                } else if (payload.color == "2") {
-                  LightGreen
-                } else if (payload.color == "3") {
-                  LightBlue
-                } else {
-                  LightYellow
-                }
-              } else {
-                MaterialTheme.colorScheme.background
-              }
-            ),
-          contentAlignment = Alignment.Center
-        ) {
-          Text(
-            text = if (payload != null) {
-              if (payload.color == "1") {
-                "ตำแหน่งไฟสีแดง"
-              } else if (payload.color == "2") {
-                "ตำแหน่งไฟสีเขียว"
-              } else if (payload.color == "3") {
-                "ตำแหน่งไฟสีน้ำเงิน"
-              } else {
-                "ตำแหน่งไฟสีเหลือง"
-              }
-            } else {
-              "ไม่พบสี"
-            },
-            fontWeight = FontWeight.Bold,
-            color = if (payload != null) {
-              Color.White
-            } else {
-              MaterialTheme.colorScheme.onSurface
-            },
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(vertical = 6.dp)
-          )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        DispenseListScreen(
-          data = dispenseViewModel.dispenseData!!
+        CircularProgressIndicator(
+          modifier = Modifier.size(24.dp),
+          color = LgsBlue,
+          strokeWidth = 2.dp
         )
       }
+    } else if (dispenseViewModel.dispenseData == null) {
+      ScanPromptUI(contentPadding)
+    } else {
+      Box(
+        modifier = Modifier
+          .padding(contentPadding)
+          .background(
+            if (payload != null) {
+              if (payload.color == "1") {
+                LightRed
+              } else if (payload.color == "2") {
+                LightGreen
+              } else if (payload.color == "3") {
+                LightBlue
+              } else {
+                LightYellow
+              }
+            } else {
+              MaterialTheme.colorScheme.background
+            }
+          )
+      ) {
+        Column(
+          modifier = Modifier
+            .fillMaxSize()
+        ) {
+          Spacer(modifier = Modifier.height(8.dp))
+
+          Box(
+            modifier = Modifier
+              .fillMaxWidth()
+              .background(
+                if (payload != null) {
+                  if (payload.color == "1") {
+                    LightRed
+                  } else if (payload.color == "2") {
+                    LightGreen
+                  } else if (payload.color == "3") {
+                    LightBlue
+                  } else {
+                    LightYellow
+                  }
+                } else {
+                  MaterialTheme.colorScheme.background
+                }
+              ),
+            contentAlignment = Alignment.Center
+          ) {
+            Text(
+              text = if (payload != null) {
+                if (payload.color == "1") {
+                  "ตำแหน่งไฟสีแดง"
+                } else if (payload.color == "2") {
+                  "ตำแหน่งไฟสีเขียว"
+                } else if (payload.color == "3") {
+                  "ตำแหน่งไฟสีน้ำเงิน"
+                } else {
+                  "ตำแหน่งไฟสีเหลือง"
+                }
+              } else {
+                "ไม่พบสี"
+              },
+              fontWeight = FontWeight.Bold,
+              color = if (payload != null) {
+                Color.White
+              } else {
+                MaterialTheme.colorScheme.onSurface
+              },
+              style = MaterialTheme.typography.titleLarge,
+              modifier = Modifier.padding(vertical = 6.dp)
+            )
+          }
+
+          Spacer(modifier = Modifier.height(8.dp))
+
+          PatientInfoSection(data = dispenseViewModel.dispenseData!!)
+
+          Spacer(modifier = Modifier.height(8.dp))
+
+          DispenseListScreen(
+            data = dispenseViewModel.dispenseData!!
+          )
+        }
+      }
+    }
+
+    if (dispenseViewModel.dispenseData != null) {
+      PullRefreshIndicator(
+        refreshing = dispenseViewModel.isLoading,
+        state = pullRefreshState,
+        backgroundColor = defaultColor,
+        contentColor = LgsBlue,
+        modifier = Modifier
+          .align(Alignment.TopCenter)
+          .padding(top = 24.dp)
+      )
     }
   }
 
@@ -623,9 +681,13 @@ fun DispenseScreen(
                     isReceived = false
                     orderLabel = null
 
+                    settings.clearOrderLabel()
+
                     delay(500)
 
-                    dispenseViewModel.handleDispense(dispenseViewModel.dispenseData?.hn ?: "")
+                    dispenseViewModel.handleReorderDispense(
+                      dispenseViewModel.dispenseData?.hn ?: ""
+                    )
                   }
                 }
               },
@@ -733,23 +795,6 @@ private fun DispenseListScreen(
         .fillMaxSize()
         .padding(8.dp)
     ) {
-      PatientInfoSection(data = data)
-
-      Spacer(modifier = Modifier.height(14.dp))
-//
-//      val dispensedCount = data.orders.count { it.f_dispensestatus == "1" }
-//      val totalCount = data.orders.size
-//      Text(
-//        text = "จัดยาแล้ว ($dispensedCount/$totalCount)",
-//        style = MaterialTheme.typography.titleMedium,
-//        fontWeight = FontWeight.Bold,
-//        color = if (dispensedCount == totalCount) LgsGreen else MaterialTheme.colorScheme.onSurface,
-//        textAlign = TextAlign.Center,
-//        modifier = Modifier.fillMaxWidth()
-//      )
-//
-//      Spacer(modifier = Modifier.height(16.dp))
-
       LazyColumn(
         modifier = Modifier.weight(1f),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -764,36 +809,43 @@ private fun DispenseListScreen(
 
 @Composable
 private fun PatientInfoSection(data: DispenseModel) {
-  Column(
+  Box(
     modifier = Modifier
-      .fillMaxWidth()
-      .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
-      .padding(horizontal = 16.dp, vertical = 14.dp),
-    verticalArrangement = Arrangement.spacedBy(4.dp)
+      .padding(horizontal = 8.dp)
   ) {
-    Row(
-      modifier = Modifier.fillMaxWidth(),
-      horizontalArrangement = Arrangement.SpaceBetween
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+        .clip(shape = RoundedCornerShape(20.dp))
+        .background(MaterialTheme.colorScheme.background)
+        .padding(horizontal = 16.dp, vertical = 14.dp),
+      verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+      ) {
+        Text(
+          text = "ใบสั่งยา: ${data.hn}",
+          fontWeight = FontWeight.Bold,
+          style = MaterialTheme.typography.bodyMedium
+        )
+        Text(
+          text = "จำนวน ${data.orders.size} รายการ",
+          fontWeight = FontWeight.Bold,
+          color = LgsGreen,
+          style = MaterialTheme.typography.bodyMedium
+        )
+      }
       Text(
-        text = "ใบสั่งยา: ${data.hn}",
+        text = "ผู้ป่วย: ${data.patientName}",
         fontWeight = FontWeight.Bold,
-        style = MaterialTheme.typography.bodyMedium
-      )
-      Text(
-        text = "จำนวน ${data.orders.size} รายการ",
-        fontWeight = FontWeight.Bold,
-        color = LgsGreen,
-        style = MaterialTheme.typography.bodyMedium
+        style = MaterialTheme.typography.bodyMedium,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
       )
     }
-    Text(
-      text = "ผู้ป่วย: ${data.patientName}",
-      fontWeight = FontWeight.Bold,
-      style = MaterialTheme.typography.bodyMedium,
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis
-    )
   }
 }
 
@@ -802,33 +854,28 @@ private fun OrderItemCard(order: OrderModel) {
   val isDispensed = order.f_dispensestatus == "1"
   val binLocationColor = if (isDispensed) LgsGreen else Color.Red
 
-  Row(
+  Column(
     modifier = Modifier
       .fillMaxWidth()
       .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
       .clip(RoundedCornerShape(16.dp))
       .padding(vertical = 12.dp, horizontal = 16.dp),
-    verticalAlignment = Alignment.CenterVertically
+    verticalArrangement = Arrangement.spacedBy(4.dp)
   ) {
-    Column(
-      modifier = Modifier.weight(1f),
-      verticalArrangement = Arrangement.spacedBy(4.dp)
+    Text(
+      text = "ชื่อยา: ${order.f_orderitemname}",
+      style = MaterialTheme.typography.bodyMedium,
+      color = Color.Gray,
+      maxLines = 2,
+      overflow = TextOverflow.Ellipsis
+    )
+
+    Row(
+      modifier = Modifier
+        .fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.Bottom
     ) {
-      Text(
-        text = "จำนวน ${order.f_orderqty} ${order.f_orderunitdesc}",
-        style = MaterialTheme.typography.bodyMedium,
-        fontWeight = FontWeight.SemiBold
-      )
-      Text(
-        text = "ชื่อยา: ${order.f_orderitemname}",
-        style = MaterialTheme.typography.bodyMedium,
-        color = Color.Gray
-      )
-    }
-
-    Spacer(modifier = Modifier.width(16.dp))
-
-    Column(horizontalAlignment = Alignment.End) {
       Row {
         Text(
           text = "BinLo : ",
@@ -843,9 +890,19 @@ private fun OrderItemCard(order: OrderModel) {
         )
       }
 
-      Spacer(modifier = Modifier.height(4.dp))
+      Spacer(modifier = Modifier.width(16.dp))
 
-      StatusIndicator(isDispensed = isDispensed)
+      Column(horizontalAlignment = Alignment.End) {
+        Text(
+          text = "จำนวน ${order.f_orderqty} ${order.f_orderunitdesc}",
+          style = MaterialTheme.typography.bodyMedium,
+          fontWeight = FontWeight.SemiBold
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        StatusIndicator(isDispensed = isDispensed)
+      }
     }
   }
 }

@@ -2,6 +2,7 @@ package com.thanesgroup.lgs.data.repositories
 
 import com.thanesgroup.lgs.data.model.ApiResponse
 import com.thanesgroup.lgs.data.model.CheckDrugModel
+import com.thanesgroup.lgs.data.model.CheckUserModel
 import com.thanesgroup.lgs.data.model.DispenseModel
 import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.model.LoginRequest
@@ -25,8 +26,16 @@ object ApiRepository {
     return RetrofitInstance.api.qrLogin(request)
   }
 
+  suspend fun checkTokenExpire(id: String): Response<ApiResponse<CheckUserModel>> {
+    return RetrofitInstance.createApiWithAuth().checkTokenExpire(id)
+  }
+
   suspend fun dispense(hn: String): Response<ApiResponse<DispenseModel>> {
     return RetrofitInstance.createApiWithAuth().dispense(hn)
+  }
+
+  suspend fun reorderDispense(hn: String): Response<ApiResponse<DispenseModel>> {
+    return RetrofitInstance.createApiWithAuth().reorderDispense(hn)
   }
 
   suspend fun checkDrug(drugCode: String): Response<ApiResponse<CheckDrugModel>> {

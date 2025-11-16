@@ -29,12 +29,15 @@ class SettingsRepository(private val context: Context) {
   private object PreferencesKeys {
     val HN = stringPreferencesKey("hn")
     val SECOND_USER = stringPreferencesKey("second_user")
+    val ORDER_LABEL = stringPreferencesKey("order_label")
   }
 
-  val hn: Flow<String> = context.dataStore.data
-    .map { preferences ->
+  val hn: Flow<String> = context.dataStore.data.map { preferences ->
       preferences[PreferencesKeys.HN] ?: ""
     }
+
+  val orderLabelFlow: Flow<String?> =
+    context.dataStore.data.map { pref -> pref[PreferencesKeys.ORDER_LABEL] }
 
   suspend fun saveHn(hn: String) {
     context.dataStore.edit { settings ->
@@ -45,6 +48,18 @@ class SettingsRepository(private val context: Context) {
   suspend fun saveSecondUser(name: String) {
     context.dataStore.edit { settings ->
       settings[PreferencesKeys.SECOND_USER] = name
+    }
+  }
+
+  suspend fun saveOrderLabel(json: String) {
+    context.dataStore.edit { prefs ->
+      prefs[PreferencesKeys.ORDER_LABEL] = json
+    }
+  }
+
+  suspend fun clearOrderLabel() {
+    context.dataStore.edit { prefs ->
+      prefs.remove(PreferencesKeys.ORDER_LABEL)
     }
   }
 

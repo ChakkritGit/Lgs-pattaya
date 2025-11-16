@@ -51,11 +51,50 @@ class DispenseViewModel(
             if (data.orders.isNotEmpty()) {
               dispenseData = data
               settingsRepository.saveHn(hn)
-            } else {
-              dispenseData = null
-              settingsRepository.clearHn()
             }
           } else {
+            settingsRepository.clearHn()
+          }
+        } else {
+          val errorJson = response.errorBody()?.string()
+          val errorApiMessage = parseErrorMessage(response.code(), errorJson)
+          errorMessage = errorApiMessage
+          settingsRepository.clearHn()
+
+          if (response.code() == 401) {
+            handleUnauthorizedError(response.code(), context, authViewModel, navController)
+          }
+        }
+      } catch (e: Exception) {
+        if (e is retrofit2.HttpException && e.code() == 401) {
+          handleUnauthorizedError(e.code(), context, authViewModel, navController)
+        }
+
+        val exceptionMessage = parseExceptionMessage(e)
+        errorMessage = exceptionMessage
+        Log.d("UnAunthorized", exceptionMessage)
+        settingsRepository.clearHn()
+      } finally {
+        isLoading = false
+      }
+    }
+  }
+
+  fun handleReorderDispense(hn: String) {
+    if (hn.isBlank()) return
+    isLoading = true
+
+    viewModelScope.launch {
+      try {
+        val response = ApiRepository.reorderDispense(hn)
+
+        if (response.isSuccessful) {
+          val data = response.body()?.data
+          if (data != null && data.orders.isNotEmpty()) {
+            dispenseData = data
+            settingsRepository.saveHn(hn)
+          } else {
+            dispenseData = null
             settingsRepository.clearHn()
           }
         } else {

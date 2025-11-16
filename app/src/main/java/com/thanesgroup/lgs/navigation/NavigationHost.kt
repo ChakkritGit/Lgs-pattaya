@@ -2,6 +2,7 @@ package com.thanesgroup.lgs.navigation
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -14,12 +15,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.thanesgroup.lgs.data.model.TokenDecodeModel
+import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.repositories.SettingsRepository
+import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
 import com.thanesgroup.lgs.data.viewModel.DataStoreViewModel
 import com.thanesgroup.lgs.data.viewModel.DataStoreViewModelFactory
@@ -30,10 +35,16 @@ import com.thanesgroup.lgs.screen.auth.LoginScreen
 import com.thanesgroup.lgs.screen.auth.LoginWithCodeScreen
 import com.thanesgroup.lgs.screen.main.MainScreen
 import com.thanesgroup.lgs.screen.splashScreen.SplashScreen
+import com.thanesgroup.lgs.util.handleUnauthorizedError
+import com.thanesgroup.lgs.util.jwtDecode
+import com.thanesgroup.lgs.util.parseErrorMessage
+import com.thanesgroup.lgs.util.parseExceptionMessage
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController, context: Context) {
+  val scope = rememberCoroutineScope()
   val application = context.applicationContext as Application
   val authViewModel: AuthViewModel = viewModel()
   val updateViewModel: UpdateViewModel = viewModel()
@@ -54,8 +65,44 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
   val authState by authViewModel.authState.collectAsState()
   val storedHn by dataStoreViewModel.hn.collectAsState()
 
+  fun handleCheckTokenExpire(authStateParam: AuthState) {
+    scope.launch {
+      try {
+        val id = jwtDecode<TokenDecodeModel>(authStateParam.token) ?: return@launch
+
+        val response = ApiRepository.checkTokenExpire(id.id)
+
+        if (response.isSuccessful) {
+          val data = response.body()?.data
+          if (data != null) {
+            Log.d("AuthSuccess", data.f_userfullname ?: "n/a")
+          }
+        } else {
+          val errorJson = response.errorBody()?.string()
+          val errorApiMessage = parseErrorMessage(response.code(), errorJson)
+          Log.e("AuthFail: ", errorApiMessage)
+
+          if (response.code() == 401) {
+            handleUnauthorizedError(response.code(), context, authViewModel, navController)
+          }
+        }
+      } catch (e: Exception) {
+        if (e is retrofit2.HttpException && e.code() == 401) {
+          handleUnauthorizedError(e.code(), context, authViewModel, navController)
+        }
+
+        val exceptionMessage = parseExceptionMessage(e)
+        Log.e("AuthFail: ", exceptionMessage)
+      }
+    }
+  }
+
   LaunchedEffect(Unit) {
     authViewModel.initializeAuth(context)
+  }
+
+  LaunchedEffect(authState) {
+    handleCheckTokenExpire(authState)
   }
 
   LaunchedEffect(Unit) {
@@ -64,7 +111,7 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
 
   LaunchedEffect(storedHn) {
     if (dispenseViewModel.dispenseData == null && storedHn.isNotEmpty() && storedHn != "Loading...") {
-      dispenseViewModel.handleDispense(storedHn)
+      dispenseViewModel.handleReorderDispense(storedHn)
     }
   }
 

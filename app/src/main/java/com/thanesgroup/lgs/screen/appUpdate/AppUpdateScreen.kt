@@ -22,6 +22,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.PullRefreshState
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,7 +47,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,7 +68,7 @@ import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
 import com.thanesgroup.lgs.ui.theme.Blue80
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun AppUpdateScreen(
   updateViewModel: UpdateViewModel, navController: NavHostController
@@ -69,12 +76,28 @@ fun AppUpdateScreen(
   val context = LocalContext.current
   val updateState by updateViewModel.updateState.collectAsState()
   val updateInfo by updateViewModel.updateInfo.collectAsState()
+  var isLoading by remember { mutableStateOf(false) }
 
   val installPermissionLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.StartActivityForResult()
   ) {
     updateViewModel.checkForUpdate()
   }
+
+  val pullRefreshState = rememberPullRefreshState(
+    refreshing = isLoading,
+    onRefresh = {
+      isLoading = true
+      when (updateState) {
+        is UpdateState.Idle -> {
+          updateViewModel.checkForUpdate()
+          isLoading = false
+        }
+
+        else -> {}
+      }
+    }
+  )
 
   LaunchedEffect(updateState) {
     when (updateState) {
@@ -176,7 +199,7 @@ fun AppUpdateScreen(
         }
 
         is UpdateState.Idle -> {
-          LatestVersionUI(updateViewModel)
+          LatestVersionUI(updateViewModel, pullRefreshState, isLoading)
         }
 
         else -> {
@@ -283,8 +306,18 @@ private fun SoftwareUpdateInfo(
   }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun LatestVersionUI(updateViewModel: UpdateViewModel) {
+private fun LatestVersionUI(
+  updateViewModel: UpdateViewModel,
+  pullRefreshState: PullRefreshState,
+  isLoading: Boolean
+) {
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .pullRefresh(pullRefreshState)
+  ) {
   Column(
     verticalArrangement = Arrangement.spacedBy(2.dp),
     horizontalAlignment = Alignment.CenterHorizontally
@@ -312,6 +345,16 @@ private fun LatestVersionUI(updateViewModel: UpdateViewModel) {
       text = "ซอฟต์แวร์ของคุณเป็นเวอร์ชันล่าสุด",
       style = MaterialTheme.typography.labelLarge,
       color = Color.Gray
+    )
+  }
+    PullRefreshIndicator(
+      refreshing = isLoading,
+      state = pullRefreshState,
+      backgroundColor = MaterialTheme.colorScheme.background,
+      contentColor = LgsBlue,
+      modifier = Modifier
+        .align(Alignment.TopCenter)
+        .padding(top = 24.dp)
     )
   }
 }
