@@ -49,6 +49,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -101,6 +102,7 @@ import com.thanesgroup.lgs.util.jwtDecode
 import com.thanesgroup.lgs.util.parseErrorMessage
 import com.thanesgroup.lgs.util.parseExceptionMessage
 import com.thanesgroup.lgs.util.updateStatusBarColor
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -215,6 +217,12 @@ fun DispenseScreen(
     if (dispenseViewModel.errorMessage.isNotEmpty()) {
       Toast.makeText(context, dispenseViewModel.errorMessage, Toast.LENGTH_SHORT).show()
       dispenseViewModel.errorMessage = ""
+    }
+  }
+
+  DisposableEffect(Unit) {
+    onDispose {
+      updateStatusBarColor(activity, defaultColor)
     }
   }
 
@@ -367,7 +375,9 @@ fun DispenseScreen(
           Spacer(modifier = Modifier.height(8.dp))
 
           DispenseListScreen(
-            data = dispenseViewModel.dispenseData!!
+            data = dispenseViewModel.dispenseData!!,
+            dispenseViewModel = dispenseViewModel,
+            scope = scope
           )
         }
       }
@@ -937,7 +947,7 @@ private fun ScanPromptUI(contentPadding: PaddingValues) {
 
 @Composable
 private fun DispenseListScreen(
-  data: DispenseModel
+  data: DispenseModel, scope: CoroutineScope, dispenseViewModel: DispenseViewModel
 ) {
   Box(
     modifier = Modifier
@@ -957,6 +967,31 @@ private fun DispenseListScreen(
       ) {
         items(data.orders) { order ->
           OrderItemCard(order = order)
+        }
+
+        item {
+          Button(
+            onClick = {
+              scope.launch {
+                if (dispenseViewModel.dispenseData == null) return@launch
+
+                dispenseViewModel.handleDispense(dispenseViewModel.dispenseData!!.hn)
+              }
+            },
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(bottom = 12.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+            enabled = !dispenseViewModel.isLoading
+          ) {
+            Text(
+              text = "บันทึกการจัดยา",
+              fontWeight = FontWeight.Normal,
+              color = Color.White,
+              style = MaterialTheme.typography.titleMedium
+            )
+          }
         }
       }
     }

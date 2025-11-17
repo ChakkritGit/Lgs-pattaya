@@ -72,7 +72,42 @@ class DispenseViewModel(
 
         val exceptionMessage = parseExceptionMessage(e)
         errorMessage = exceptionMessage
-        Log.d("UnAunthorized", exceptionMessage)
+        settingsRepository.clearHn()
+      } finally {
+        isLoading = false
+      }
+    }
+  }
+
+  fun handlePauseDispense(hn: String) {
+    if (hn.isBlank()) return
+    isLoading = true
+
+    viewModelScope.launch {
+      try {
+        val response = ApiRepository.pauseDispense(hn)
+
+        if (response.isSuccessful) {
+          dispenseData = null
+          settingsRepository.clearHn()
+          settingsRepository.clearOrderLabel()
+        } else {
+          val errorJson = response.errorBody()?.string()
+          val errorApiMessage = parseErrorMessage(response.code(), errorJson)
+          errorMessage = errorApiMessage
+          settingsRepository.clearHn()
+
+          if (response.code() == 401) {
+            handleUnauthorizedError(response.code(), context, authViewModel, navController)
+          }
+        }
+      } catch (e: Exception) {
+        if (e is retrofit2.HttpException && e.code() == 401) {
+          handleUnauthorizedError(e.code(), context, authViewModel, navController)
+        }
+
+        val exceptionMessage = parseExceptionMessage(e)
+        errorMessage = exceptionMessage
         settingsRepository.clearHn()
       } finally {
         isLoading = false

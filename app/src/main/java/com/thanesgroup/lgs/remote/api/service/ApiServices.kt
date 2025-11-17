@@ -38,6 +38,9 @@ interface ApiService {
   @GET("prescription/order/{hn}")
   suspend fun dispense(@Path("hn") hn: String): Response<ApiResponse<DispenseModel>>
 
+  @POST("prescription/order/{hn}")
+  suspend fun pauseDispense(@Path("hn") hn: String): Response<ApiResponse<DispenseModel>>
+
   @GET("prescription/dispensated/{hn}")
   suspend fun reorderDispense(@Path("hn") hn: String): Response<ApiResponse<DispenseModel>>
 

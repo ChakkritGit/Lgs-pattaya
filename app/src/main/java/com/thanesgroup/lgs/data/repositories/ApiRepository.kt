@@ -41,6 +41,10 @@ object ApiRepository {
     return RetrofitInstance.createApiWithAuth().dispense(hn)
   }
 
+  suspend fun pauseDispense(hn: String): Response<ApiResponse<DispenseModel>> {
+    return RetrofitInstance.createApiWithAuth().pauseDispense(hn)
+  }
+
   suspend fun reorderDispense(hn: String): Response<ApiResponse<DispenseModel>> {
     return RetrofitInstance.createApiWithAuth().reorderDispense(hn)
   }
