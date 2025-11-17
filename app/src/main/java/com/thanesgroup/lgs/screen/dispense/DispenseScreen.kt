@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -118,6 +117,9 @@ fun DispenseScreen(
   val activity = LocalActivity.current as Activity
   val scope = rememberCoroutineScope()
   val keyboardController = LocalSoftwareKeyboardController.current
+  val defaultColor = MaterialTheme.colorScheme.background
+  val updateState by updateViewModel.updateState.collectAsState()
+  val updateInfo by updateViewModel.updateInfo.collectAsState()
   val hideKeyboard = Keyboard.hideKeyboard()
   val payload = jwtDecode<TokenDecodeModel>(authState.token)
   var orderLabel by remember { mutableStateOf<LabelModel?>(null) }
@@ -132,12 +134,9 @@ fun DispenseScreen(
   var userpassword by rememberSaveable { mutableStateOf("") }
   val focusRequesterPassword = remember { FocusRequester() }
   val hn = dispenseViewModel.dispenseData?.hn
-  val defaultColor = MaterialTheme.colorScheme.background
   val settings = remember { SettingsRepository.getInstance(context) }
   val savedOrderLabelJson by settings.orderLabelFlow.collectAsState(initial = null)
   var showUpdateDialog by remember { mutableStateOf(false) }
-  val updateState by updateViewModel.updateState.collectAsState()
-  val updateInfo by updateViewModel.updateInfo.collectAsState()
 
   val pullRefreshState = rememberPullRefreshState(
     refreshing = dispenseViewModel.isLoading,
@@ -954,6 +953,8 @@ private fun ScanPromptUI(contentPadding: PaddingValues) {
 private fun DispenseListScreen(
   data: DispenseModel, scope: CoroutineScope, dispenseViewModel: DispenseViewModel
 ) {
+  var showPauseDispenseDialog by remember { mutableStateOf(false) }
+
   Box(
     modifier = Modifier
       .fillMaxSize()
@@ -976,13 +977,7 @@ private fun DispenseListScreen(
 
         item {
           Button(
-            onClick = {
-              scope.launch {
-                if (dispenseViewModel.dispenseData == null) return@launch
-
-                dispenseViewModel.handleDispense(dispenseViewModel.dispenseData!!.hn)
-              }
-            },
+            onClick = { showPauseDispenseDialog = true },
             modifier = Modifier
               .fillMaxWidth()
               .padding(bottom = 12.dp),
@@ -996,6 +991,93 @@ private fun DispenseListScreen(
               color = Color.White,
               style = MaterialTheme.typography.titleMedium
             )
+          }
+        }
+      }
+    }
+  }
+
+  if (showPauseDispenseDialog) {
+    Dialog(
+      onDismissRequest = { showPauseDispenseDialog = false },
+      properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+      Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 52.dp)
+          .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+            shape = RoundedCornerShape(34.dp)
+          ),
+        shape = RoundedCornerShape(34.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+      ) {
+        Column(
+          modifier = Modifier.padding(top = 12.dp, start = 12.dp, end = 12.dp, bottom = 10.dp),
+          horizontalAlignment = Alignment.Start
+        ) {
+          Column(
+            modifier = Modifier.padding(top = 12.dp, start = 10.dp, end = 10.dp),
+            horizontalAlignment = Alignment.Start
+          ) {
+            Text(
+              text = "ยืนยันการจัดยา",
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = FontWeight.Bold,
+              fontFamily = anuphanFamily
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = "ยังมีรายการจัดยาที่ยังไม่เสร็จ ต้องการยืนยันการจัดยาหรือไม่?",
+              style = MaterialTheme.typography.bodyMedium,
+              fontFamily = anuphanFamily
+            )
+          }
+          Spacer(modifier = Modifier.height(12.dp))
+
+          Row(
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Button(
+              onClick = { showPauseDispenseDialog = false },
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            ) {
+              Text(
+                text = "ปิด",
+                fontFamily = anuphanFamily,
+                style = MaterialTheme.typography.labelLarge
+              )
+            }
+
+            Button(
+              onClick = {
+                scope.launch {
+                  if (dispenseViewModel.dispenseData == null) return@launch
+
+                  dispenseViewModel.handlePauseDispense(dispenseViewModel.dispenseData!!.hn)
+
+                  showPauseDispenseDialog = false
+                }
+              },
+              colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+              shape = CircleShape,
+              modifier = Modifier.weight(1f)
+            ) {
+              Text(
+                text = "ยืนยัน",
+                fontFamily = anuphanFamily,
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White
+              )
+            }
           }
         }
       }

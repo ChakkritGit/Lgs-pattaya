@@ -184,6 +184,7 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
         navController = navController,
         authViewModel = authViewModel,
         context = context,
+        updateViewModel = updateViewModel,
         innerPadding = innerPadding
       )
     }
