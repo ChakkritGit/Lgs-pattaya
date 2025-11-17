@@ -255,8 +255,11 @@ private fun SoftwareUpdateInfo(
           .heightIn(max = 350.dp)
           .verticalScroll(rememberScrollState())
       ) {
+        val rawChangelog = updateInfo.changelog
+        val formattedChangelog = rawChangelog.replace("\\n", "\n")
+
         Text(
-          text = updateInfo.changelog,
+          text = formattedChangelog,
           style = MaterialTheme.typography.bodyMedium,
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )

@@ -21,8 +21,8 @@ android {
     applicationId = "com.thanesgroup.lgs"
     minSdk = 29
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = 7
+    versionName = "1.0-rc"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -33,6 +33,10 @@ android {
       keyPassword = keystoreProperties["MYAPP_RELEASE_KEY_PASSWORD"] as String
       storeFile = file(keystoreProperties["MYAPP_RELEASE_STORE_FILE"] as String)
       storePassword = keystoreProperties["MYAPP_RELEASE_STORE_PASSWORD"] as String
+
+      enableV1Signing = true
+      enableV2Signing = true
+      enableV3Signing = true
     }
   }
 

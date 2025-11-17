@@ -174,6 +174,7 @@ fun MainScreen(
             contentPadding = innerPadding,
             dispenseViewModel = dispenseViewModel,
             authState = authState,
+            updateViewModel = updateViewModel,
             context = context
           )
         }
