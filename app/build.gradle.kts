@@ -1,7 +1,16 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.compose)
+}
+
+val keystorePropertiesFile = rootProject.file("gradle.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+  keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -18,10 +27,20 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  signingConfigs {
+    create("release") {
+      keyAlias = keystoreProperties["MYAPP_RELEASE_KEY_ALIAS"] as String
+      keyPassword = keystoreProperties["MYAPP_RELEASE_KEY_PASSWORD"] as String
+      storeFile = file(keystoreProperties["MYAPP_RELEASE_STORE_FILE"] as String)
+      storePassword = keystoreProperties["MYAPP_RELEASE_STORE_PASSWORD"] as String
+    }
+  }
+
   buildTypes {
     release {
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      signingConfig = signingConfigs.getByName("release")
     }
   }
   compileOptions {
@@ -58,7 +77,7 @@ dependencies {
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.accompanist.navigation.animation)
   implementation(libs.compose)
-  implementation("androidx.core:core-splashscreen:1.2.0")
+  implementation(libs.androidx.core.splashscreen)
 
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)

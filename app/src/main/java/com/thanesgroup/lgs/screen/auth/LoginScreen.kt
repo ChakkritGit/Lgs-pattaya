@@ -52,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.thanesgroup.lgs.BuildConfig
 import com.thanesgroup.lgs.R
 import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
@@ -79,6 +80,7 @@ fun LoginScreen(
 
   val focusRequesterPassword = remember { FocusRequester() }
   val keyboardController = LocalSoftwareKeyboardController.current
+  val buildVersionName = BuildConfig.VERSION_NAME
 
   val hideKeyboard = Keyboard.hideKeyboard()
 
@@ -306,5 +308,14 @@ fun LoginScreen(
         )
       }
     }
+
+    Text(
+      text = "Version $buildVersionName",
+      modifier = Modifier
+        .align(Alignment.BottomCenter)
+        .padding(bottom = 24.dp),
+      color = MaterialTheme.colorScheme.outlineVariant,
+      style = MaterialTheme.typography.labelMedium
+    )
   }
 }
