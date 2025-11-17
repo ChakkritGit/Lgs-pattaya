@@ -96,7 +96,7 @@ import com.thanesgroup.lgs.ui.theme.LightBlue
 import com.thanesgroup.lgs.ui.theme.LightGreen
 import com.thanesgroup.lgs.ui.theme.LightRed
 import com.thanesgroup.lgs.ui.theme.LightYellow
-import com.thanesgroup.lgs.ui.theme.ibmpiexsansthailooped
+import com.thanesgroup.lgs.ui.theme.anuphanFamily
 import com.thanesgroup.lgs.util.jwtDecode
 import com.thanesgroup.lgs.util.parseErrorMessage
 import com.thanesgroup.lgs.util.parseExceptionMessage
@@ -630,7 +630,7 @@ fun DispenseScreen(
             ) {
               Text(
                 text = "ยกเลิก",
-                fontFamily = ibmpiexsansthailooped,
+                fontFamily = anuphanFamily,
                 style = MaterialTheme.typography.labelLarge
               )
             }
@@ -806,7 +806,7 @@ fun DispenseScreen(
 //            ) {
 //              Text(
 //                text = "ยกเลิก",
-//                fontFamily = ibmpiexsansthailooped,
+//                fontFamily = anuphanFamily,
 //                style = MaterialTheme.typography.labelLarge
 //              )
 //            }
@@ -843,7 +843,7 @@ fun DispenseScreen(
               if (!dispenseViewModel.isReceiveLoading) {
                 Text(
                   text = "ยืนยัน",
-                  fontFamily = ibmpiexsansthailooped,
+                  fontFamily = anuphanFamily,
                   style = MaterialTheme.typography.labelLarge,
                   color = Color.White
                 )

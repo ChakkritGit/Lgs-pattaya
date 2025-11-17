@@ -51,7 +51,7 @@ import com.thanesgroup.lgs.navigation.Routes
 import com.thanesgroup.lgs.ui.component.menu.SettingsMenuItem
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 import com.thanesgroup.lgs.ui.theme.Red40
-import com.thanesgroup.lgs.ui.theme.ibmpiexsansthailooped
+import com.thanesgroup.lgs.ui.theme.anuphanFamily
 import com.thanesgroup.lgs.util.jwtDecode
 import kotlinx.coroutines.launch
 
@@ -79,14 +79,12 @@ fun MenuScreen(
           Text(
             "การตั้งค่า", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge
           )
-        },
-        colors = TopAppBarDefaults.topAppBarColors(
+        }, colors = TopAppBarDefaults.topAppBarColors(
           containerColor = MaterialTheme.colorScheme.surface,
           titleContentColor = MaterialTheme.colorScheme.onSurface
         )
       )
-    }
-  ) { innerPadding ->
+    }) { innerPadding ->
     Column(
       modifier = Modifier
         .fillMaxSize()
@@ -95,18 +93,16 @@ fun MenuScreen(
         .background(MaterialTheme.colorScheme.surface)
     ) {
       Text(
-        text = "ทั่วไป", style = MaterialTheme.typography.labelMedium, color = Color.Gray,
+        text = "ทั่วไป",
+        style = MaterialTheme.typography.labelMedium,
+        color = Color.Gray,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
       )
 
       SettingsMenuItem(
-        icon = R.drawable.autorenew_24px,
-        text = "อัปเดตแอพ",
-        updateState = updateState,
-        onClick = {
+        icon = R.drawable.autorenew_24px, text = "อัปเดตแอพ", updateState = updateState, onClick = {
           navController.navigate(MenuSubRoutes.AppUpdate.route)
-        }
-      )
+        })
 
       Spacer(modifier = Modifier.height(24.dp))
 
@@ -159,22 +155,22 @@ fun MenuScreen(
             horizontalAlignment = Alignment.Start
           ) {
             Text(
-              text = "ยังมีรายการจัดยาอยู่", style = MaterialTheme.typography.titleMedium,
+              text = "ยังมีรายการจัดยาอยู่",
+              style = MaterialTheme.typography.titleMedium,
               fontWeight = FontWeight.Bold,
-              fontFamily = ibmpiexsansthailooped
+              fontFamily = anuphanFamily
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
               text = "คุณต้องการยกเลิกการจัดยาใช่หรือไม่?",
               style = MaterialTheme.typography.bodyMedium,
-              fontFamily = ibmpiexsansthailooped
+              fontFamily = anuphanFamily
             )
           }
           Spacer(modifier = Modifier.height(12.dp))
 
           Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
             Button(
               onClick = { openToConfirmCancelDispenseDialog = false },
@@ -187,7 +183,7 @@ fun MenuScreen(
             ) {
               Text(
                 text = "ปิด",
-                fontFamily = ibmpiexsansthailooped,
+                fontFamily = anuphanFamily,
                 style = MaterialTheme.typography.labelLarge
               )
             }
@@ -222,7 +218,7 @@ fun MenuScreen(
             ) {
               Text(
                 text = "ยืนยัน",
-                fontFamily = ibmpiexsansthailooped,
+                fontFamily = anuphanFamily,
                 style = MaterialTheme.typography.labelLarge,
                 color = Color.White
               )
@@ -241,7 +237,7 @@ fun MenuScreen(
       Card(
         modifier = Modifier
           .fillMaxWidth()
-          .padding(horizontal = 56.dp)
+          .padding(horizontal = 52.dp)
           .border(
             width = 1.dp,
             color = MaterialTheme.colorScheme.outline,
@@ -260,21 +256,22 @@ fun MenuScreen(
             horizontalAlignment = Alignment.Start
           ) {
             Text(
-              text = "ยืนยันการออกจากระบบ", style = MaterialTheme.typography.titleMedium,
+              text = "ยืนยันการออกจากระบบ",
+              style = MaterialTheme.typography.titleMedium,
               fontWeight = FontWeight.Bold,
-              fontFamily = ibmpiexsansthailooped
+              fontFamily = anuphanFamily
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-              text = "คุณต้องการออกจากระบบใช่หรือไม่?", style = MaterialTheme.typography.bodyMedium,
-              fontFamily = ibmpiexsansthailooped
+              text = "คุณต้องการออกจากระบบใช่หรือไม่?",
+              style = MaterialTheme.typography.bodyMedium,
+              fontFamily = anuphanFamily
             )
           }
           Spacer(modifier = Modifier.height(12.dp))
 
           Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
             Button(
               onClick = { showLogoutDialog = false },
@@ -287,7 +284,7 @@ fun MenuScreen(
             ) {
               Text(
                 text = "ยกเลิก",
-                fontFamily = ibmpiexsansthailooped,
+                fontFamily = anuphanFamily,
                 style = MaterialTheme.typography.labelLarge
               )
             }
@@ -320,7 +317,7 @@ fun MenuScreen(
             ) {
               Text(
                 text = "ยืนยัน",
-                fontFamily = ibmpiexsansthailooped,
+                fontFamily = anuphanFamily,
                 style = MaterialTheme.typography.labelLarge,
                 color = Color.White
               )
