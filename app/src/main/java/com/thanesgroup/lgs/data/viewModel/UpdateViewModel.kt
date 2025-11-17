@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,6 +25,7 @@ sealed class UpdateState {
   data class Downloading(val progress: Int) : UpdateState()
   data class DownloadComplete(val fileUri: Uri) : UpdateState()
   data class Failed(val message: String) : UpdateState()
+  data class checkFile(val message: String) : UpdateState()
 }
 
 class UpdateViewModel(application: Application) : AndroidViewModel(application) {
@@ -35,6 +37,33 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
   val updateInfo = _updateInfo.asStateFlow()
   private val buildVersionName = BuildConfig.VERSION_NAME
 
+//  private fun calculateSha256(file: File): String {
+//    val digest = MessageDigest.getInstance("SHA-256")
+//    file.inputStream().use { fis ->
+//      val buffer = ByteArray(8192)
+//      var bytesRead: Int
+//      while (fis.read(buffer).also { bytesRead = it } != -1) {
+//        digest.update(buffer, 0, bytesRead)
+//      }
+//    }
+//
+//    return digest.digest().joinToString("") { "%02x".format(it) }
+//  }
+
+  private fun verifyPackageName(apkFile: File): Boolean {
+    try {
+      val packageManager = getApplication<Application>().packageManager
+      val packageInfo = packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
+
+      if (packageInfo != null) {
+        return packageInfo.packageName == BuildConfig.APPLICATION_ID
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+    }
+    return false
+  }
+
   fun checkForUpdate() {
     viewModelScope.launch {
       _updateState.value = UpdateState.Checking
@@ -45,7 +74,7 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
         if (response.isSuccessful && response.body() != null) {
           val updateInfo = response.body()!!.data
           val currentVersionCode = BuildConfig.VERSION_CODE
-          if (updateInfo.version_code > currentVersionCode.toString()) {
+          if (updateInfo.version_code.toInt() > currentVersionCode) {
             _updateInfo.value = updateInfo
             _updateState.value = UpdateState.UpdateAvailable(updateInfo)
           } else {
@@ -85,6 +114,31 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
                 _updateState.value = UpdateState.Downloading(progress)
               }
             }
+          }
+
+          _updateState.value = UpdateState.checkFile("check sha256 chunk sum")
+
+//          val downloadedFileSha256 = calculateSha256(file)
+//          if (downloadedFileSha256.equals(updateInfo.sha256, ignoreCase = true)) {
+//            Log.d("UpdateViewModel", "SHA-256 checksum verification successful.")
+//          } else {
+//            Log.d(
+//              "UpdateViewModel",
+//              "SHA-256 checksum verification FAILED. Expected: ${updateInfo.sha256}, Got: $downloadedFileSha256"
+//            )
+//            file.delete()
+//            throw Exception("ไฟล์อัปเดตไม่ถูกต้อง (Checksum mismatch)")
+//          }
+
+          if (verifyPackageName(file)) {
+            Log.d("UpdateViewModel", "Package name verification successful.")
+          } else {
+            Log.d(
+              "UpdateViewModel",
+              "Package name verification FAILED. This might be a malicious APK."
+            )
+            file.delete()
+            throw Exception("ไฟล์อัปเดตไม่ถูกต้อง (Package name mismatch)")
           }
 
           val fileUri = FileProvider.getUriForFile(

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -18,7 +19,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -38,10 +38,6 @@ import com.thanesgroup.lgs.screen.auth.LoginScreen
 import com.thanesgroup.lgs.screen.auth.LoginWithCodeScreen
 import com.thanesgroup.lgs.screen.main.MainScreen
 import com.thanesgroup.lgs.screen.splashScreen.SplashScreen
-import com.thanesgroup.lgs.ui.theme.LightBlue
-import com.thanesgroup.lgs.ui.theme.LightGreen
-import com.thanesgroup.lgs.ui.theme.LightRed
-import com.thanesgroup.lgs.ui.theme.LightYellow
 import com.thanesgroup.lgs.util.handleUnauthorizedError
 import com.thanesgroup.lgs.util.jwtDecode
 import com.thanesgroup.lgs.util.parseErrorMessage
@@ -53,7 +49,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController, context: Context) {
   val scope = rememberCoroutineScope()
-  val activity = LocalContext.current as Activity
+  val activity = LocalActivity.current as Activity
   val application = context.applicationContext as Application
   val authViewModel: AuthViewModel = viewModel()
   val updateViewModel: UpdateViewModel = viewModel()

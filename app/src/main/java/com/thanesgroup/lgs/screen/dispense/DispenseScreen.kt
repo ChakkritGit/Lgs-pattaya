@@ -4,7 +4,9 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -64,7 +66,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -114,7 +115,7 @@ fun DispenseScreen(
   updateViewModel: UpdateViewModel,
   context: Context
 ) {
-  val activity = LocalContext.current as Activity
+  val activity = LocalActivity.current as Activity
   val scope = rememberCoroutineScope()
   val keyboardController = LocalSoftwareKeyboardController.current
   val hideKeyboard = Keyboard.hideKeyboard()

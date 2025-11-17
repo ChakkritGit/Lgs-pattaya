@@ -10,36 +10,14 @@ import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitInstance {
-  val api: ApiService by lazy {
-    Retrofit.Builder()
-      .baseUrl(BaseUrl)
-      .addConverterFactory(GsonConverterFactory.create())
-      .build()
-      .create(ApiService::class.java)
-  }
-
-  fun createApiWithAuth(): ApiService {
-    val client = OkHttpClient.Builder()
-      .addInterceptor(AuthInterceptor())
+class JsonHeaderInterceptor : Interceptor {
+  override fun intercept(chain: Interceptor.Chain): Response {
+    val req = chain.request().newBuilder()
+      .addHeader("Accept", "application/json")
+      .addHeader("Content-Type", "application/json")
       .build()
 
-    return Retrofit.Builder()
-      .baseUrl(BaseUrl)
-      .client(client)
-      .addConverterFactory(GsonConverterFactory.create())
-      .build()
-      .create(ApiService::class.java)
-  }
-}
-
-object RetrofitOutSiteInstance {
-  val api: ApiService by lazy {
-    Retrofit.Builder()
-      .baseUrl(BaseUrlOutSite)
-      .addConverterFactory(GsonConverterFactory.create())
-      .build()
-      .create(ApiService::class.java)
+    return chain.proceed(req)
   }
 }
 
@@ -47,14 +25,59 @@ class AuthInterceptor : Interceptor {
   override fun intercept(chain: Interceptor.Chain): Response {
     val token = TokenHolder.token.orEmpty()
 
-    val request = if (token.isNotEmpty()) {
-      chain.request().newBuilder()
-        .addHeader("Authorization", "Bearer $token")
-        .build()
-    } else {
-      chain.request()
+    val builder = chain.request().newBuilder()
+      .addHeader("Accept", "application/json")
+      .addHeader("Content-Type", "application/json")
+
+    if (token.isNotEmpty()) {
+      builder.addHeader("Authorization", "Bearer $token")
     }
 
-    return chain.proceed(request)
+    return chain.proceed(builder.build())
+  }
+}
+
+object RetrofitInstance {
+
+  private val client = OkHttpClient.Builder()
+    .addInterceptor(JsonHeaderInterceptor())
+    .build()
+
+  val api: ApiService by lazy {
+    Retrofit.Builder()
+      .baseUrl(BaseUrl)
+      .client(client)
+      .addConverterFactory(GsonConverterFactory.create())
+      .build()
+      .create(ApiService::class.java)
+  }
+
+  fun createApiWithAuth(): ApiService {
+    val clientAuth = OkHttpClient.Builder()
+      .addInterceptor(AuthInterceptor())
+      .build()
+
+    return Retrofit.Builder()
+      .baseUrl(BaseUrl)
+      .client(clientAuth)
+      .addConverterFactory(GsonConverterFactory.create())
+      .build()
+      .create(ApiService::class.java)
+  }
+}
+
+object RetrofitOutSiteInstance {
+
+  private val client = OkHttpClient.Builder()
+    .addInterceptor(JsonHeaderInterceptor())
+    .build()
+
+  val api: ApiService by lazy {
+    Retrofit.Builder()
+      .baseUrl(BaseUrlOutSite)
+      .client(client)
+      .addConverterFactory(GsonConverterFactory.create())
+      .build()
+      .create(ApiService::class.java)
   }
 }
