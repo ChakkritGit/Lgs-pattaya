@@ -1,9 +1,14 @@
 package com.thanesgroup.lgs.screen.auth
 
 import android.content.Context
+import android.content.Intent
+import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,14 +17,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,6 +40,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,13 +62,19 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import com.thanesgroup.lgs.BuildConfig
 import com.thanesgroup.lgs.R
 import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
 import com.thanesgroup.lgs.data.viewModel.TokenHolder
+import com.thanesgroup.lgs.data.viewModel.UpdateState
+import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
 import com.thanesgroup.lgs.navigation.Routes
+import com.thanesgroup.lgs.screen.dispense.DownloadProgress
 import com.thanesgroup.lgs.ui.component.keyboard.Keyboard
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 import com.thanesgroup.lgs.util.parseErrorMessage
@@ -68,6 +85,7 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
   navController: NavHostController,
   authViewModel: AuthViewModel,
+  updateViewModel: UpdateViewModel,
   context: Context,
   innerPadding: PaddingValues
 ) {
@@ -77,6 +95,9 @@ fun LoginScreen(
   var userpassword by rememberSaveable { mutableStateOf("") }
   var errorMessage by remember { mutableStateOf("") }
   var isLoading by remember { mutableStateOf(false) }
+  var showUpdateDialog by remember { mutableStateOf(false) }
+  val updateInfo by updateViewModel.updateInfo.collectAsState()
+  val updateState by updateViewModel.updateState.collectAsState()
 
   val focusRequesterPassword = remember { FocusRequester() }
   val keyboardController = LocalSoftwareKeyboardController.current
@@ -125,6 +146,12 @@ fun LoginScreen(
       } finally {
         isLoading = false
       }
+    }
+  }
+
+  LaunchedEffect(updateState) {
+    if (updateState is UpdateState.UpdateAvailable) {
+      showUpdateDialog = true
     }
   }
 
@@ -317,5 +344,135 @@ fun LoginScreen(
       color = MaterialTheme.colorScheme.outlineVariant,
       style = MaterialTheme.typography.labelMedium
     )
+
+    if (showUpdateDialog) {
+      val installPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+      ) {
+        if (context.packageManager.canRequestPackageInstalls()) {
+          updateInfo?.let { updateViewModel.downloadUpdate(it) }
+        }
+      }
+
+      Dialog(
+        onDismissRequest = { },
+        properties = DialogProperties(
+          dismissOnBackPress = false,
+          dismissOnClickOutside = false,
+          usePlatformDefaultWidth = false
+        )
+      ) {
+        Card(
+          modifier = Modifier
+            .fillMaxWidth(0.85f)
+            .border(
+              width = 1.dp,
+              color = MaterialTheme.colorScheme.outline,
+              shape = RoundedCornerShape(34.dp)
+            ),
+          shape = RoundedCornerShape(34.dp),
+          elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+          colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+        ) {
+          Column(
+            modifier = Modifier.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            Text(
+              text = "มีอัปเดตใหม่",
+              fontWeight = FontWeight.Bold,
+              style = MaterialTheme.typography.titleLarge
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+              "เวอร์ชัน ${updateInfo?.version_name} พร้อมให้ติดตั้งแล้ว",
+              style = MaterialTheme.typography.bodyMedium
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+            Column(
+              verticalArrangement = Arrangement.Top,
+              horizontalAlignment = Alignment.Start
+            ) {
+              Text("มีอะไรใหม่:", fontWeight = FontWeight.SemiBold)
+              Spacer(modifier = Modifier.height(8.dp))
+              Column(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .heightIn(max = 200.dp)
+                  .verticalScroll(rememberScrollState())
+              ) {
+                val rawChangelog = updateInfo?.changelog ?: "n/a"
+                val formattedChangelog = rawChangelog.replace("\\n", "\n")
+
+                Text(
+                  text = formattedChangelog,
+                  style = MaterialTheme.typography.bodySmall,
+                  color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+              }
+            }
+
+            Box(
+              modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp, start = 8.dp, end = 8.dp, top = 8.dp),
+              contentAlignment = Alignment.Center
+            ) {
+              when (updateState) {
+                is UpdateState.UpdateAvailable -> {
+                  Button(
+                    onClick = {
+                      if (updateInfo == null) return@Button
+
+                      if (context.packageManager.canRequestPackageInstalls()) {
+                        updateViewModel.downloadUpdate(updateInfo!!)
+                      } else {
+                        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                          data = "package:${context.packageName}".toUri()
+                        }
+                        installPermissionLauncher.launch(intent)
+                      }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = LgsBlue)
+                  ) {
+                    Text("ดาวน์โหลด", color = Color.White)
+                  }
+                }
+
+                is UpdateState.Downloading -> {
+                  DownloadProgress(progress = (updateState as UpdateState.Downloading).progress)
+                }
+
+                is UpdateState.checkFile -> {
+                  Text(
+                    "กำลังเตรียมพร้อมสำหรับการติดตั้ง",
+                    style = MaterialTheme.typography.labelLarge
+                  )
+                }
+
+                is UpdateState.DownloadComplete -> {
+                  Button(
+                    onClick = {
+                      updateViewModel.installUpdate(
+                        context,
+                        (updateState as UpdateState.DownloadComplete).fileUri
+                      )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = LgsBlue)
+                  ) {
+                    Text("ติดตั้ง", color = Color.White)
+                  }
+                }
+
+                else -> {}
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

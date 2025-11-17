@@ -282,6 +282,10 @@ private fun SoftwareUpdateInfo(
             }
           }
 
+          is UpdateState.checkFile -> {
+            Text("กำลังเตรียมพร้อมสำหรับการติดตั้ง", style = MaterialTheme.typography.labelLarge)
+          }
+
           is UpdateState.Downloading -> {
             DownloadProgress(updateState.progress)
           }

@@ -135,8 +135,8 @@ fun DispenseScreen(
   val defaultColor = MaterialTheme.colorScheme.background
   val settings = remember { SettingsRepository.getInstance(context) }
   val savedOrderLabelJson by settings.orderLabelFlow.collectAsState(initial = null)
-  val updateState by updateViewModel.updateState.collectAsState()
   var showUpdateDialog by remember { mutableStateOf(false) }
+  val updateState by updateViewModel.updateState.collectAsState()
   val updateInfo by updateViewModel.updateInfo.collectAsState()
 
   val pullRefreshState = rememberPullRefreshState(
@@ -495,6 +495,10 @@ fun DispenseScreen(
 
               is UpdateState.Downloading -> {
                 DownloadProgress(progress = (updateState as UpdateState.Downloading).progress)
+              }
+
+              is UpdateState.checkFile -> {
+                Text("กำลังเตรียมพร้อมสำหรับการติดตั้ง", style = MaterialTheme.typography.labelLarge)
               }
 
               is UpdateState.DownloadComplete -> {
@@ -867,7 +871,7 @@ fun DispenseScreen(
 }
 
 @Composable
-private fun DownloadProgress(progress: Int) {
+fun DownloadProgress(progress: Int) {
   Column(
     modifier = Modifier.fillMaxWidth(),
     horizontalAlignment = Alignment.CenterHorizontally
