@@ -21,8 +21,8 @@ android {
     applicationId = "com.thanesgroup.lgs"
     minSdk = 29
     targetSdk = 36
-    versionCode = 7
-    versionName = "1.0-rc"
+    versionCode = 1
+    versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

@@ -101,7 +101,6 @@ import com.thanesgroup.lgs.util.jwtDecode
 import com.thanesgroup.lgs.util.parseErrorMessage
 import com.thanesgroup.lgs.util.parseExceptionMessage
 import com.thanesgroup.lgs.util.updateStatusBarColor
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -262,8 +261,6 @@ fun DispenseScreen(
             orderLabel = null
 
             settings.clearOrderLabel()
-
-            delay(500)
 
             dispenseViewModel.handleReorderDispense(dispenseViewModel.dispenseData?.hn ?: "")
           }
@@ -826,8 +823,6 @@ fun DispenseScreen(
                     orderLabel = null
 
                     settings.clearOrderLabel()
-
-                    delay(500)
 
                     dispenseViewModel.handleReorderDispense(
                       dispenseViewModel.dispenseData?.hn ?: ""
