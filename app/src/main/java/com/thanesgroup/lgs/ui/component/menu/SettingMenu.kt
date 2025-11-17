@@ -59,7 +59,7 @@ fun SettingsMenuItem(
           .background(Color.Red)
       ) {
         Text(
-          text = "New",
+          text = "ใหม่",
           style = MaterialTheme.typography.labelSmall,
           color = Color.White,
           modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp)

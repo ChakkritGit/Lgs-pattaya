@@ -347,7 +347,7 @@ private fun LatestVersionUI(
         )
       }
       Text(
-        text = "ซอฟต์แวร์ของคุณเป็นเวอร์ชันล่าสุด",
+        text = "แอพของคุณเป็นเวอร์ชันล่าสุด",
         style = MaterialTheme.typography.labelLarge,
         color = Color.Gray
       )
