@@ -933,7 +933,7 @@ private fun ScanPromptUI(contentPadding: PaddingValues) {
       Spacer(modifier = Modifier.height(42.dp))
 
       Text(
-        text = "สแกน hn",
+        text = "สแกน HN",
         fontWeight = FontWeight.Bold,
         style = MaterialTheme.typography.titleLarge
       )

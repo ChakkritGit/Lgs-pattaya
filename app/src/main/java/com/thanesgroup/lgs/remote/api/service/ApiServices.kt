@@ -15,6 +15,7 @@ import com.thanesgroup.lgs.data.model.UserAuthData
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -38,7 +39,7 @@ interface ApiService {
   @GET("prescription/order/{hn}")
   suspend fun dispense(@Path("hn") hn: String): Response<ApiResponse<DispenseModel>>
 
-  @POST("prescription/order/{hn}")
+  @DELETE("prescription/dispense/{hn}")
   suspend fun pauseDispense(@Path("hn") hn: String): Response<ApiResponse<DispenseModel>>
 
   @GET("prescription/dispensated/{hn}")
