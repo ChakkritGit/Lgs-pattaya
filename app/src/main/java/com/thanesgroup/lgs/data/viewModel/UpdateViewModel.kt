@@ -12,6 +12,7 @@ import com.thanesgroup.lgs.BuildConfig
 import com.thanesgroup.lgs.data.model.UpdateInfo
 import com.thanesgroup.lgs.data.repositories.ApiRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -141,6 +142,8 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
             file.delete()
             throw Exception("ไฟล์อัปเดตไม่ถูกต้อง (Package name mismatch)")
           }
+
+          delay(1500)
 
           val fileUri = FileProvider.getUriForFile(
             getApplication(), "${BuildConfig.APPLICATION_ID}.fileprovider", file
