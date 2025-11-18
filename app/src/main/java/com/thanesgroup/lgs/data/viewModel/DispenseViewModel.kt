@@ -30,7 +30,6 @@ class DispenseViewModel(
 ) : AndroidViewModel(application) {
   var dispenseData by mutableStateOf<DispenseModel?>(null)
   var dispenseOnData by mutableStateOf<DispenseOnModel?>(null)
-  var dispenseOffData by mutableStateOf<DispenseOnModel?>(null)
 
   var isLoading by mutableStateOf(false)
     private set
@@ -82,73 +81,54 @@ class DispenseViewModel(
     }
   }
 
-  fun handleDispenseOnManual(scannedCode: String) {
-    if (scannedCode.isBlank()) return
-    isLoading = true
+  suspend fun handleDispenseOnManual(scannedCode: String): DispenseOnModel? {
+    return try {
+      val response = ApiRepository.dispenseOnManual(scannedCode)
 
-    viewModelScope.launch {
-      try {
-        val response = ApiRepository.dispenseOnManual(scannedCode)
+      if (response.isSuccessful) {
+        response.body()?.data
+      } else {
+        val errorJson = response.errorBody()?.string()
+        errorMessage = parseErrorMessage(response.code(), errorJson)
 
-        if (response.isSuccessful) {
-          val data = response.body()?.data
-          if (data != null) {
-            dispenseOnData = data
-          }
-        } else {
-          val errorJson = response.errorBody()?.string()
-          val errorApiMessage = parseErrorMessage(response.code(), errorJson)
-          errorMessage = errorApiMessage
-
-          if (response.code() == 401) {
-            handleUnauthorizedError(response.code(), context, authViewModel, navController)
-          }
+        if (response.code() == 401) {
+          handleUnauthorizedError(response.code(), context, authViewModel, navController)
         }
-      } catch (e: Exception) {
-        if (e is retrofit2.HttpException && e.code() == 401) {
-          handleUnauthorizedError(e.code(), context, authViewModel, navController)
-        }
-
-        val exceptionMessage = parseExceptionMessage(e)
-        errorMessage = exceptionMessage
-      } finally {
-        isLoading = false
+        null
       }
+    } catch (e: Exception) {
+      if (e is retrofit2.HttpException && e.code() == 401) {
+        handleUnauthorizedError(e.code(), context, authViewModel, navController)
+      }
+
+      errorMessage = parseExceptionMessage(e)
+      null
     }
   }
 
-  fun handleDispenseOffManual(scannedCode: String) {
-    if (scannedCode.isBlank()) return
-    isLoading = true
+  suspend fun handleDispenseOffManual(scannedCode: String): DispenseOnModel? {
+    return try {
+      val response = ApiRepository.dispenseOffManual(scannedCode)
 
-    viewModelScope.launch {
-      try {
-        val response = ApiRepository.dispenseOffManual(scannedCode)
+      if (response.isSuccessful) {
+        dispenseOnData = null
+        response.body()?.data
+      } else {
+        val errorJson = response.errorBody()?.string()
+        errorMessage = parseErrorMessage(response.code(), errorJson)
 
-        if (response.isSuccessful) {
-          val data = response.body()?.data
-          if (data != null) {
-            dispenseOffData = data
-          }
-        } else {
-          val errorJson = response.errorBody()?.string()
-          val errorApiMessage = parseErrorMessage(response.code(), errorJson)
-          errorMessage = errorApiMessage
-
-          if (response.code() == 401) {
-            handleUnauthorizedError(response.code(), context, authViewModel, navController)
-          }
+        if (response.code() == 401) {
+          handleUnauthorizedError(response.code(), context, authViewModel, navController)
         }
-      } catch (e: Exception) {
-        if (e is retrofit2.HttpException && e.code() == 401) {
-          handleUnauthorizedError(e.code(), context, authViewModel, navController)
-        }
-
-        val exceptionMessage = parseExceptionMessage(e)
-        errorMessage = exceptionMessage
-      } finally {
-        isLoading = false
+        null
       }
+    } catch (e: Exception) {
+      if (e is retrofit2.HttpException && e.code() == 401) {
+        handleUnauthorizedError(e.code(), context, authViewModel, navController)
+      }
+
+      errorMessage = parseExceptionMessage(e)
+      null
     }
   }
 
