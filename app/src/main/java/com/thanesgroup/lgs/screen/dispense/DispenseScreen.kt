@@ -205,6 +205,7 @@ fun DispenseScreen(
               }
 
               else -> {
+                isCheckingLoading = false
                 showSelectDrugDialog = true
                 filteredOrderData = findDrug
               }
@@ -283,7 +284,6 @@ fun DispenseScreen(
           scannedCodeText = scannedCode
 
           if (!isChecked) {
-
             val findDrug =
               dispenseViewModel.dispenseData?.orders?.filter { it.f_orderitemcode == scannedCode }
 
@@ -312,6 +312,7 @@ fun DispenseScreen(
               }
 
               else -> {
+                isCheckingLoading = false
                 showSelectDrugDialog = true
                 filteredOrderData = findDrug
               }
@@ -486,7 +487,7 @@ fun DispenseScreen(
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
           LazyColumn(
-            modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
           ) {
             items(filteredOrderData) { order ->
               val isSelected = filteredOrderDataObject == order
@@ -508,13 +509,15 @@ fun DispenseScreen(
               Column(
                 modifier = Modifier
                   .fillMaxWidth()
-                  .background(backgroundSelected)
                   .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
                   .clip(RoundedCornerShape(16.dp))
-                  .padding(vertical = 12.dp, horizontal = 16.dp)
-                  .clickable(onClick = {
-                    filteredOrderDataObject = order
-                  }), verticalArrangement = Arrangement.spacedBy(4.dp)
+                  .clickable(
+                    onClick = {
+                      filteredOrderDataObject = order
+                    })
+                  .background(backgroundSelected)
+                  .padding(vertical = 12.dp, horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
               ) {
                 Text(
                   text = "ชื่อยา: ${order.f_orderitemname}",
@@ -575,6 +578,7 @@ fun DispenseScreen(
             Button(
               onClick = {
                 showSelectDrugDialog = false
+                filteredOrderDataObject = null
                 filteredOrderData = emptyList<OrderModel>()
               },
               shape = CircleShape,
@@ -594,11 +598,10 @@ fun DispenseScreen(
             Button(
               onClick = {
                 scope.launch {
-                  val labelData =
-                    dispenseViewModel.handleGetLabel(
-                      filteredOrderDataObject!!.f_referenceCode,
-                      filteredOrderDataObject!!.f_orderitemcode
-                    )
+                  val labelData = dispenseViewModel.handleGetLabel(
+                    filteredOrderDataObject!!.f_referenceCode,
+                    filteredOrderDataObject!!.f_orderitemcode
+                  )
                   if (labelData != null) {
                     orderLabel = labelData
                     scope.launch {
