@@ -86,6 +86,7 @@ class DispenseViewModel(
       val response = ApiRepository.dispenseOnManual(scannedCode)
 
       if (response.isSuccessful) {
+        dispenseOnData = response.body()?.data
         response.body()?.data
       } else {
         val errorJson = response.errorBody()?.string()

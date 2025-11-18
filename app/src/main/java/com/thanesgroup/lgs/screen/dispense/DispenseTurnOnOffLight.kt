@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -90,6 +92,8 @@ fun DispenseTurnOnOffLight(
 
           retryBarcode = ""
         }
+      } else {
+        dispenseViewModel.errorMessage = "BinLo ไม่ถูกต้อง"
       }
     }
   }
@@ -105,7 +109,10 @@ fun DispenseTurnOnOffLight(
     modifier = Modifier.padding(contentPadding)
   ) { _ ->
     Box(
-      modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(horizontal = 16.dp),
+      contentAlignment = Alignment.Center
     ) {
       if (dispenseViewModel.isLoading) {
         CircularProgressIndicator(
@@ -118,6 +125,27 @@ fun DispenseTurnOnOffLight(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
           ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.Center,
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Icon(
+                painter = painterResource(id = R.drawable.barcode_scanner_24px),
+                contentDescription = "Scan icon",
+                modifier = Modifier.size(24.dp)
+              )
+              Spacer(modifier = Modifier.width(8.dp))
+              Text(
+                text = "Scan ช่องยาเพื่อยืนยันการจัดยา",
+                color = Color.Red,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+              )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Row {
               Text(
                 text = "BinLo : ",
@@ -131,6 +159,17 @@ fun DispenseTurnOnOffLight(
                 color = Color.Red
               )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text (
+              text = dispenseViewModel.dispenseOnData?.drugCode ?: "ไม่พบชื่อยา",
+              style = MaterialTheme.typography.titleSmall,
+              fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface,
+              maxLines = 2,
+              overflow = TextOverflow.Ellipsis
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
