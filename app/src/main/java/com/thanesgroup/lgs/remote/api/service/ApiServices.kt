@@ -10,6 +10,7 @@ import com.thanesgroup.lgs.data.model.LogoutRequest
 import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.ReceiveOrderModel
 import com.thanesgroup.lgs.data.model.ReceiveOrderRequest
+import com.thanesgroup.lgs.data.model.ReceiveRequest
 import com.thanesgroup.lgs.data.model.UpdateInfo
 import com.thanesgroup.lgs.data.model.UserAuthData
 import okhttp3.ResponseBody
@@ -48,11 +49,8 @@ interface ApiService {
   @GET("prescription/narcotic/{drugcode}")
   suspend fun checkDrug(@Path("drugcode") drugcode: String): Response<ApiResponse<CheckDrugModel>>
 
-  @GET("prescription/label/{hn}/{drugcode}")
-  suspend fun getLabel(
-    @Path("hn") hn: String,
-    @Path("drugcode") drugcode: String
-  ): Response<ApiResponse<LabelModel>>
+  @POST("prescription/label")
+  suspend fun getLabel(@Body request: ReceiveRequest): Response<ApiResponse<LabelModel>>
 
   @PATCH("prescription/receive/{binlo}")
   suspend fun receiveOrder(

@@ -182,9 +182,9 @@ class DispenseViewModel(
     }
   }
 
-  suspend fun handleGetLabel(hn: String, drugCode: String): LabelModel? {
+  suspend fun handleGetLabel(reference: String, drugCode: String): LabelModel? {
     return try {
-      val response = ApiRepository.getLabel(hn, drugCode)
+      val response = ApiRepository.getLabel(reference, drugCode)
 
       if (response.isSuccessful) {
         response.body()?.data

@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -137,15 +138,21 @@ fun DispenseScreen(
   val settings = remember { SettingsRepository.getInstance(context) }
   val savedOrderLabelJson by settings.orderLabelFlow.collectAsState(initial = null)
   var showUpdateDialog by remember { mutableStateOf(false) }
+  var showRetryGetLabelDialog by remember { mutableStateOf(false) }
+  var isRetryGetLabelLoading by remember { mutableStateOf(false) }
+  var showRetryReceiveDialog by remember { mutableStateOf(false) }
+  var showSelectDrugDialog by remember { mutableStateOf(false) }
+  var retryBarcode by remember { mutableStateOf("") }
+  var scannedCodeText by remember { mutableStateOf("") }
+  var filteredOrderData by remember { mutableStateOf<List<OrderModel>>(emptyList<OrderModel>()) }
+  var filteredOrderDataObject by remember { mutableStateOf<OrderModel?>(null) }
 
   val pullRefreshState = rememberPullRefreshState(
-    refreshing = dispenseViewModel.isLoading,
-    onRefresh = {
+    refreshing = dispenseViewModel.isLoading, onRefresh = {
       if (hn != null && hn.isNotEmpty()) {
         dispenseViewModel.handleReorderDispense(hn)
       }
-    }
-  )
+    })
 
   fun handleUserVerify() {
     dispenseViewModel.errorMessage = ""
@@ -168,6 +175,31 @@ fun DispenseScreen(
           if (userData != null) {
             user2 = userData.name
             isUserVerified = true
+
+            val findDrug =
+              dispenseViewModel.dispenseData?.orders?.filter { it.f_orderitemcode == scannedCodeText }
+
+            findDrug?.size?.let {
+              if (it > 1) {
+                showSelectDrugDialog = true
+                filteredOrderData = findDrug
+              } else {
+                val labelData =
+                  dispenseViewModel.handleGetLabel(findDrug[0].f_referenceCode, scannedCodeText)
+                if (labelData != null) {
+                  orderLabel = labelData
+                  scope.launch {
+                    settings.saveOrderLabel(Gson().toJson(orderLabel))
+                  }
+                  isCheckingLoading = false
+                  openDialog = true
+                } else {
+                  isCheckingLoading = false
+                  retryBarcode = scannedCodeText
+                  showRetryGetLabelDialog = true
+                }
+              }
+            }
           } else {
             dispenseViewModel.errorMessage = "เกิดข้อผิดพลาด"
           }
@@ -237,16 +269,35 @@ fun DispenseScreen(
           if (isCheckingLoading) return@launch
 
           isCheckingLoading = true
+
           val isChecked = dispenseViewModel.handleCheckNarcotic(scannedCode)
+          scannedCodeText = scannedCode
 
           if (!isChecked) {
-            val hn = dispenseViewModel.dispenseData!!.hn
-            orderLabel = dispenseViewModel.handleGetLabel(hn, scannedCode)
-            scope.launch {
-              settings.saveOrderLabel(Gson().toJson(orderLabel))
+            val findDrug =
+              dispenseViewModel.dispenseData?.orders?.filter { it.f_orderitemcode == scannedCode }
+
+            findDrug?.size?.let {
+              if (it > 1) {
+                showSelectDrugDialog = true
+                filteredOrderData = findDrug
+              } else {
+                val labelData =
+                  dispenseViewModel.handleGetLabel(findDrug[0].f_referenceCode, scannedCode)
+                if (labelData != null) {
+                  orderLabel = labelData
+                  scope.launch {
+                    settings.saveOrderLabel(Gson().toJson(orderLabel))
+                  }
+                  isCheckingLoading = false
+                  openDialog = true
+                } else {
+                  isCheckingLoading = false
+                  retryBarcode = scannedCode
+                  showRetryGetLabelDialog = true
+                }
+              }
             }
-            isCheckingLoading = false
-            openDialog = true
           } else {
             isCheckingLoading = false
 
@@ -254,13 +305,12 @@ fun DispenseScreen(
               openUserVerifyDialog = true
             }
           }
+
         } else {
           if (dispenseViewModel.isReceiveLoading) return@launch
 
           isReceived = dispenseViewModel.handleReceive(
-            orderLabel?.f_itemlocationno,
-            orderLabel?.f_referenceCode,
-            user2
+            orderLabel?.f_itemlocationno, orderLabel?.f_referenceCode, user2
           )
 
           if (isReceived) {
@@ -271,6 +321,10 @@ fun DispenseScreen(
             settings.clearOrderLabel()
 
             dispenseViewModel.handleReorderDispense(dispenseViewModel.dispenseData?.hn ?: "")
+          } else {
+            isReceived = false
+            openDialog = false
+            showRetryReceiveDialog = true
           }
         }
       }
@@ -285,14 +339,10 @@ fun DispenseScreen(
 
     if (dispenseViewModel.isLoading && dispenseViewModel.dispenseData == null) {
       Box(
-        modifier = Modifier
-          .fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
       ) {
         CircularProgressIndicator(
-          modifier = Modifier.size(24.dp),
-          color = LgsBlue,
-          strokeWidth = 2.dp
+          modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
         )
       }
     } else if (dispenseViewModel.dispenseData == null) {
@@ -318,8 +368,7 @@ fun DispenseScreen(
           )
       ) {
         Column(
-          modifier = Modifier
-            .fillMaxSize()
+          modifier = Modifier.fillMaxSize()
         ) {
           Spacer(modifier = Modifier.height(8.dp))
 
@@ -340,8 +389,7 @@ fun DispenseScreen(
                 } else {
                   MaterialTheme.colorScheme.background
                 }
-              ),
-            contentAlignment = Alignment.Center
+              ), contentAlignment = Alignment.Center
           ) {
             Text(
               text = if (payload != null) {
@@ -396,6 +444,275 @@ fun DispenseScreen(
     }
   }
 
+  if (showSelectDrugDialog) {
+    Dialog(
+      onDismissRequest = { }, properties = DialogProperties(
+        dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false
+      )
+    ) {
+      Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 14.dp)
+          .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+            shape = RoundedCornerShape(34.dp)
+          ),
+        shape = RoundedCornerShape(34.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+      ) {
+        Column(
+          modifier = Modifier.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          LazyColumn(
+            modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)
+          ) {
+            items(filteredOrderData) { order ->
+              val isSelected = filteredOrderDataObject == order
+
+              val borderColor = if (isSelected) {
+                LgsBlue
+              } else {
+                MaterialTheme.colorScheme.outlineVariant
+              }
+
+              val backgroundSelected = if (isSelected) {
+                LgsBlue.copy(alpha = 0.2f)
+              } else {
+                MaterialTheme.colorScheme.background
+              }
+
+              val borderWidth = if (isSelected) 2.dp else 1.dp
+
+              Column(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .background(backgroundSelected)
+                  .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
+                  .clip(RoundedCornerShape(16.dp))
+                  .padding(vertical = 12.dp, horizontal = 16.dp)
+                  .clickable(onClick = {
+                    filteredOrderDataObject = order
+                  }), verticalArrangement = Arrangement.spacedBy(4.dp)
+              ) {
+                Text(
+                  text = "ชื่อยา: ${order.f_orderitemname}",
+                  style = MaterialTheme.typography.bodyMedium,
+                  color = Color.Gray,
+                  maxLines = 2,
+                  overflow = TextOverflow.Ellipsis
+                )
+
+                Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.SpaceBetween,
+                  verticalAlignment = Alignment.Bottom
+                ) {
+                  Column(horizontalAlignment = Alignment.Start) {
+                    Text(
+                      text = "ใบสั่งยา : ${order.f_prescriptionnohis}",
+                      style = MaterialTheme.typography.bodyMedium,
+                      fontWeight = FontWeight.SemiBold
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row {
+                      Text(
+                        text = "BinLo : ",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                      )
+                      Text(
+                        text = order.f_itemlocationno,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red
+                      )
+                    }
+                  }
+
+                  Spacer(modifier = Modifier.width(16.dp))
+
+                  Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                      text = "จำนวน ${order.f_orderqty} ${order.f_orderunitdesc}",
+                      style = MaterialTheme.typography.bodyMedium,
+                      fontWeight = FontWeight.SemiBold
+                    )
+                  }
+                }
+              }
+            }
+          }
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          Row(
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Button(
+              onClick = {
+                showSelectDrugDialog = false
+                filteredOrderData = emptyList<OrderModel>()
+              },
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            ) {
+              Text(
+                text = "ปิด",
+                fontFamily = anuphanFamily,
+                style = MaterialTheme.typography.labelLarge
+              )
+            }
+
+            Button(
+              onClick = {
+                scope.launch {
+                  val labelData =
+                    dispenseViewModel.handleGetLabel(
+                      filteredOrderDataObject!!.f_referenceCode,
+                      filteredOrderDataObject!!.f_orderitemcode
+                    )
+                  if (labelData != null) {
+                    orderLabel = labelData
+                    scope.launch {
+                      settings.saveOrderLabel(Gson().toJson(orderLabel))
+                    }
+                    showSelectDrugDialog = false
+                    filteredOrderData = emptyList<OrderModel>()
+                    openDialog = true
+                  } else {
+                    retryBarcode = filteredOrderDataObject!!.f_orderitemcode
+                    showSelectDrugDialog = false
+                    showRetryGetLabelDialog = true
+                  }
+                }
+              },
+              colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              enabled = filteredOrderDataObject != null
+            ) {
+              Text(
+                text = "จัดยา",
+                fontFamily = anuphanFamily,
+                style = MaterialTheme.typography.labelLarge,
+                color = Color.White
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (showRetryGetLabelDialog) {
+    Dialog(
+      onDismissRequest = { }, properties = DialogProperties(
+        dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false
+      )
+    ) {
+      Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 32.dp)
+          .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+            shape = RoundedCornerShape(34.dp)
+          ),
+        shape = RoundedCornerShape(34.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+      ) {
+        Column(
+          modifier = Modifier.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          Text(
+            text = "จัดยาล้มเหลว",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge
+          )
+          Spacer(modifier = Modifier.height(4.dp))
+
+          Text(
+            "กรุณาลองใหม่อีกครั้ง", style = MaterialTheme.typography.bodyMedium
+          )
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          Row(
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Button(
+              onClick = { showRetryGetLabelDialog = false },
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            ) {
+              Text(
+                text = "ปิด",
+                fontFamily = anuphanFamily,
+                style = MaterialTheme.typography.labelLarge
+              )
+            }
+
+            Button(
+              onClick = {
+                scope.launch {
+                  isRetryGetLabelLoading = true
+                  val hn = dispenseViewModel.dispenseData!!.hn
+                  val labelData = dispenseViewModel.handleGetLabel(hn, retryBarcode)
+
+                  if (labelData != null) {
+                    orderLabel = labelData
+                    scope.launch {
+                      settings.saveOrderLabel(Gson().toJson(orderLabel))
+                    }
+                    showRetryGetLabelDialog = false
+                    openDialog = true
+                    retryBarcode = ""
+                  }
+
+                  isRetryGetLabelLoading = false
+                }
+              },
+              colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              enabled = !isRetryGetLabelLoading
+            ) {
+              if (!isRetryGetLabelLoading) {
+                Text(
+                  text = "ลองอีกครั้ง",
+                  fontFamily = anuphanFamily,
+                  style = MaterialTheme.typography.labelLarge,
+                  color = Color.White
+                )
+              } else {
+                CircularProgressIndicator(
+                  modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   if (showUpdateDialog) {
     val installPermissionLauncher = rememberLauncherForActivityResult(
       contract = ActivityResultContracts.StartActivityForResult()
@@ -406,11 +723,8 @@ fun DispenseScreen(
     }
 
     Dialog(
-      onDismissRequest = { },
-      properties = DialogProperties(
-        dismissOnBackPress = false,
-        dismissOnClickOutside = false,
-        usePlatformDefaultWidth = false
+      onDismissRequest = { }, properties = DialogProperties(
+        dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false
       )
     ) {
       Card(
@@ -442,8 +756,7 @@ fun DispenseScreen(
           )
           HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
           Column(
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
+            verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.Start
           ) {
             Text("มีอะไรใหม่:", fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(8.dp))
@@ -497,15 +810,16 @@ fun DispenseScreen(
               }
 
               is UpdateState.checkFile -> {
-                Text("กำลังเตรียมพร้อมสำหรับการติดตั้ง", style = MaterialTheme.typography.labelLarge)
+                Text(
+                  "กำลังเตรียมพร้อมสำหรับการติดตั้ง", style = MaterialTheme.typography.labelLarge
+                )
               }
 
               is UpdateState.DownloadComplete -> {
                 Button(
                   onClick = {
                     updateViewModel.installUpdate(
-                      context,
-                      (updateState as UpdateState.DownloadComplete).fileUri
+                      context, (updateState as UpdateState.DownloadComplete).fileUri
                     )
                   },
                   modifier = Modifier.fillMaxWidth(),
@@ -525,11 +839,8 @@ fun DispenseScreen(
 
   if (openUserVerifyDialog) {
     Dialog(
-      onDismissRequest = { },
-      properties = DialogProperties(
-        dismissOnBackPress = false,
-        dismissOnClickOutside = false,
-        usePlatformDefaultWidth = false
+      onDismissRequest = { }, properties = DialogProperties(
+        dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false
       )
     ) {
       Card(
@@ -565,8 +876,7 @@ fun DispenseScreen(
           OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            modifier = Modifier
-              .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             label = { Text("ชื่อผู้ใช้") },
             leadingIcon = {
               Icon(
@@ -627,8 +937,7 @@ fun DispenseScreen(
           Spacer(modifier = Modifier.height(28.dp))
 
           Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
             Button(
               onClick = { openUserVerifyDialog = false },
@@ -677,11 +986,8 @@ fun DispenseScreen(
 
   if (isCheckingLoading) {
     Dialog(
-      onDismissRequest = { },
-      properties = DialogProperties(
-        dismissOnBackPress = false,
-        dismissOnClickOutside = false,
-        usePlatformDefaultWidth = false
+      onDismissRequest = { }, properties = DialogProperties(
+        dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false
       )
     ) {
       Card(
@@ -704,9 +1010,7 @@ fun DispenseScreen(
           contentAlignment = Alignment.Center
         ) {
           CircularProgressIndicator(
-            modifier = Modifier.size(24.dp),
-            color = LgsBlue,
-            strokeWidth = 2.dp
+            modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
           )
         }
       }
@@ -715,11 +1019,8 @@ fun DispenseScreen(
 
   if (openDialog && orderLabel != null) {
     Dialog(
-      onDismissRequest = { },
-      properties = DialogProperties(
-        dismissOnBackPress = false,
-        dismissOnClickOutside = false,
-        usePlatformDefaultWidth = false
+      onDismissRequest = { }, properties = DialogProperties(
+        dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false
       )
     ) {
       Card(
@@ -761,8 +1062,7 @@ fun DispenseScreen(
           Spacer(modifier = Modifier.height(16.dp))
 
           Column(
-            modifier = Modifier
-              .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
           ) {
@@ -803,32 +1103,13 @@ fun DispenseScreen(
           Spacer(modifier = Modifier.height(12.dp))
 
           Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
-//            Button(
-//              onClick = { showLogoutDialog = false },
-//              shape = CircleShape,
-//              modifier = Modifier.weight(1f),
-//              colors = ButtonDefaults.buttonColors(
-//                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-//                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-//              )
-//            ) {
-//              Text(
-//                text = "ยกเลิก",
-//                fontFamily = anuphanFamily,
-//                style = MaterialTheme.typography.labelLarge
-//              )
-//            }
-
             Button(
               onClick = {
                 scope.launch {
                   isReceived = dispenseViewModel.handleReceive(
-                    orderLabel?.f_itemlocationno,
-                    orderLabel?.f_referenceCode,
-                    user2
+                    orderLabel?.f_itemlocationno, orderLabel?.f_referenceCode, user2
                   )
 
                   if (isReceived) {
@@ -841,6 +1122,10 @@ fun DispenseScreen(
                     dispenseViewModel.handleReorderDispense(
                       dispenseViewModel.dispenseData?.hn ?: ""
                     )
+                  } else {
+                    isReceived = false
+                    openDialog = false
+                    showRetryReceiveDialog = true
                   }
                 }
               },
@@ -867,13 +1152,114 @@ fun DispenseScreen(
       }
     }
   }
+
+  if (showRetryReceiveDialog && orderLabel != null) {
+    Dialog(
+      onDismissRequest = { }, properties = DialogProperties(
+        dismissOnBackPress = false, dismissOnClickOutside = false, usePlatformDefaultWidth = false
+      )
+    ) {
+      Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(horizontal = 32.dp)
+          .border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+            shape = RoundedCornerShape(34.dp)
+          ),
+        shape = RoundedCornerShape(34.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background)
+      ) {
+        Column(
+          modifier = Modifier.padding(top = 14.dp, start = 14.dp, end = 14.dp, bottom = 10.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          Text(
+            text = "รับยาล้มเหลว",
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge
+          )
+          Spacer(modifier = Modifier.height(4.dp))
+
+          Text(
+            "กรุณาลองใหม่อีกครั้ง", style = MaterialTheme.typography.bodyMedium
+          )
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          Row(
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Button(
+              onClick = { showRetryReceiveDialog = false },
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            ) {
+              Text(
+                text = "ปิด",
+                fontFamily = anuphanFamily,
+                style = MaterialTheme.typography.labelLarge
+              )
+            }
+
+            Button(
+              onClick = {
+                scope.launch {
+                  isRetryGetLabelLoading = true
+                  isReceived = dispenseViewModel.handleReceive(
+                    orderLabel?.f_itemlocationno, orderLabel?.f_referenceCode, user2
+                  )
+
+                  if (isReceived) {
+                    showRetryReceiveDialog = false
+                    isReceived = false
+                    orderLabel = null
+
+                    settings.clearOrderLabel()
+
+                    dispenseViewModel.handleReorderDispense(
+                      dispenseViewModel.dispenseData?.hn ?: ""
+                    )
+                  }
+
+                  isRetryGetLabelLoading = false
+                }
+              },
+              colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+              shape = CircleShape,
+              modifier = Modifier.weight(1f),
+              enabled = !isRetryGetLabelLoading
+            ) {
+              if (!isRetryGetLabelLoading) {
+                Text(
+                  text = "ลองอีกครั้ง",
+                  fontFamily = anuphanFamily,
+                  style = MaterialTheme.typography.labelLarge,
+                  color = Color.White
+                )
+              } else {
+                CircularProgressIndicator(
+                  modifier = Modifier.size(24.dp), color = LgsBlue, strokeWidth = 2.dp
+                )
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 @Composable
 fun DownloadProgress(progress: Int) {
   Column(
-    modifier = Modifier.fillMaxWidth(),
-    horizontalAlignment = Alignment.CenterHorizontally
+    modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
   ) {
     LinearProgressIndicator(
       progress = { progress / 100f },
@@ -891,8 +1277,7 @@ private fun ScanPromptUI(contentPadding: PaddingValues) {
   Box(
     modifier = Modifier
       .fillMaxSize()
-      .padding(contentPadding),
-    contentAlignment = Alignment.Center
+      .padding(contentPadding), contentAlignment = Alignment.Center
   ) {
     Column(
       modifier = Modifier
@@ -914,8 +1299,7 @@ private fun ScanPromptUI(contentPadding: PaddingValues) {
       )
       Spacer(modifier = Modifier.height(22.dp))
       Text(
-        text = "Scan Barcode / QRCode",
-        style = MaterialTheme.typography.bodyLarge
+        text = "Scan Barcode / QRCode", style = MaterialTheme.typography.bodyLarge
       )
       Spacer(modifier = Modifier.height(42.dp))
 
@@ -936,14 +1320,11 @@ private fun ScanPromptUI(contentPadding: PaddingValues) {
       Spacer(modifier = Modifier.height(42.dp))
 
       Text(
-        text = "สแกน HN",
-        fontWeight = FontWeight.Bold,
-        style = MaterialTheme.typography.titleLarge
+        text = "สแกน HN", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge
       )
       Spacer(modifier = Modifier.height(12.dp))
       Text(
-        text = "จัดยาตามรายการยาในใบสั่งยาที่ทำการระบุ",
-        style = MaterialTheme.typography.bodyMedium
+        text = "จัดยาตามรายการยาในใบสั่งยาที่ทำการระบุ", style = MaterialTheme.typography.bodyMedium
       )
     }
   }
@@ -968,8 +1349,7 @@ private fun DispenseListScreen(
         .padding(8.dp)
     ) {
       LazyColumn(
-        modifier = Modifier.weight(1f),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)
       ) {
         items(data.orders) { order ->
           OrderItemCard(order = order)
@@ -1088,8 +1468,7 @@ private fun DispenseListScreen(
 @Composable
 private fun PatientInfoSection(data: DispenseModel) {
   Box(
-    modifier = Modifier
-      .padding(horizontal = 8.dp)
+    modifier = Modifier.padding(horizontal = 8.dp)
   ) {
     Column(
       modifier = Modifier
@@ -1101,8 +1480,7 @@ private fun PatientInfoSection(data: DispenseModel) {
       verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
       Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
       ) {
         Text(
           text = "ใบสั่งยา: ${data.hn}",
@@ -1149,23 +1527,32 @@ private fun OrderItemCard(order: OrderModel) {
     )
 
     Row(
-      modifier = Modifier
-        .fillMaxWidth(),
+      modifier = Modifier.fillMaxWidth(),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.Bottom
     ) {
-      Row {
+      Column(horizontalAlignment = Alignment.Start) {
         Text(
-          text = "BinLo : ",
-          style = MaterialTheme.typography.titleMedium,
-          fontWeight = FontWeight.Bold
+          text = "ใบสั่งยา : ${order.f_prescriptionnohis}",
+          style = MaterialTheme.typography.bodyMedium,
+          fontWeight = FontWeight.SemiBold
         )
-        Text(
-          text = order.f_itemlocationno,
-          style = MaterialTheme.typography.titleMedium,
-          fontWeight = FontWeight.Bold,
-          color = binLocationColor
-        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Row {
+          Text(
+            text = "BinLo : ",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+          )
+          Text(
+            text = order.f_itemlocationno,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = binLocationColor
+          )
+        }
       }
 
       Spacer(modifier = Modifier.width(16.dp))

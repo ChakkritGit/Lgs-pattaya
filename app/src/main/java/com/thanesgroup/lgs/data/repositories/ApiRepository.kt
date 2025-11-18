@@ -10,6 +10,7 @@ import com.thanesgroup.lgs.data.model.LogoutRequest
 import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.ReceiveOrderModel
 import com.thanesgroup.lgs.data.model.ReceiveOrderRequest
+import com.thanesgroup.lgs.data.model.ReceiveRequest
 import com.thanesgroup.lgs.data.model.UpdateInfo
 import com.thanesgroup.lgs.data.model.UserAuthData
 import com.thanesgroup.lgs.remote.config.RetrofitInstance
@@ -53,8 +54,9 @@ object ApiRepository {
     return RetrofitInstance.createApiWithAuth().checkDrug(drugCode)
   }
 
-  suspend fun getLabel(hn: String, drugCode: String): Response<ApiResponse<LabelModel>> {
-    return RetrofitInstance.createApiWithAuth().getLabel(hn, drugCode)
+  suspend fun getLabel(reference: String, drugCode: String): Response<ApiResponse<LabelModel>> {
+    val receiveRequest = ReceiveRequest(reference, drugCode)
+    return RetrofitInstance.createApiWithAuth().getLabel(receiveRequest)
   }
 
   suspend fun receiveOrder(
