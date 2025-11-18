@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
 
 sealed class UpdateState {
   object Idle : UpdateState()
@@ -37,18 +38,18 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
   val updateInfo = _updateInfo.asStateFlow()
   private val buildVersionName = BuildConfig.VERSION_NAME
 
-//  private fun calculateSha256(file: File): String {
-//    val digest = MessageDigest.getInstance("SHA-256")
-//    file.inputStream().use { fis ->
-//      val buffer = ByteArray(8192)
-//      var bytesRead: Int
-//      while (fis.read(buffer).also { bytesRead = it } != -1) {
-//        digest.update(buffer, 0, bytesRead)
-//      }
-//    }
-//
-//    return digest.digest().joinToString("") { "%02x".format(it) }
-//  }
+  private fun calculateSha256(file: File): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    file.inputStream().use { fis ->
+      val buffer = ByteArray(8192)
+      var bytesRead: Int
+      while (fis.read(buffer).also { bytesRead = it } != -1) {
+        digest.update(buffer, 0, bytesRead)
+      }
+    }
+
+    return digest.digest().joinToString("") { "%02x".format(it) }
+  }
 
   private fun verifyPackageName(apkFile: File): Boolean {
     try {
@@ -118,17 +119,17 @@ class UpdateViewModel(application: Application) : AndroidViewModel(application) 
 
           _updateState.value = UpdateState.checkFile("check sha256 chunk sum")
 
-//          val downloadedFileSha256 = calculateSha256(file)
-//          if (downloadedFileSha256.equals(updateInfo.sha256, ignoreCase = true)) {
-//            Log.d("UpdateViewModel", "SHA-256 checksum verification successful.")
-//          } else {
-//            Log.d(
-//              "UpdateViewModel",
-//              "SHA-256 checksum verification FAILED. Expected: ${updateInfo.sha256}, Got: $downloadedFileSha256"
-//            )
-//            file.delete()
-//            throw Exception("ไฟล์อัปเดตไม่ถูกต้อง (Checksum mismatch)")
-//          }
+          val downloadedFileSha256 = calculateSha256(file)
+          if (downloadedFileSha256.equals(updateInfo.checksum, ignoreCase = true)) {
+            Log.d("UpdateViewModel", "SHA-256 checksum verification successful.")
+          } else {
+            Log.d(
+              "UpdateViewModel",
+              "SHA-256 checksum verification FAILED. Expected: ${updateInfo.checksum}, Got: $downloadedFileSha256"
+            )
+            file.delete()
+            throw Exception("ไฟล์อัปเดตไม่ถูกต้อง (Checksum mismatch)")
+          }
 
           if (verifyPackageName(file)) {
             Log.d("UpdateViewModel", "Package name verification successful.")

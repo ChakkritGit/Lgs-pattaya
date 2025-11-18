@@ -176,14 +176,18 @@ fun DispenseScreen(
             user2 = userData.name
             isUserVerified = true
 
+
             val findDrug =
               dispenseViewModel.dispenseData?.orders?.filter { it.f_orderitemcode == scannedCodeText }
 
-            findDrug?.size?.let {
-              if (it > 1) {
-                showSelectDrugDialog = true
-                filteredOrderData = findDrug
-              } else {
+            if (findDrug == null) return@launch
+
+            when (findDrug.size) {
+              0 -> {
+                isCheckingLoading = false
+              }
+
+              1 -> {
                 val labelData =
                   dispenseViewModel.handleGetLabel(findDrug[0].f_referenceCode, scannedCodeText)
                 if (labelData != null) {
@@ -198,6 +202,11 @@ fun DispenseScreen(
                   retryBarcode = scannedCodeText
                   showRetryGetLabelDialog = true
                 }
+              }
+
+              else -> {
+                showSelectDrugDialog = true
+                filteredOrderData = findDrug
               }
             }
           } else {
@@ -274,14 +283,18 @@ fun DispenseScreen(
           scannedCodeText = scannedCode
 
           if (!isChecked) {
+
             val findDrug =
               dispenseViewModel.dispenseData?.orders?.filter { it.f_orderitemcode == scannedCode }
 
-            findDrug?.size?.let {
-              if (it > 1) {
-                showSelectDrugDialog = true
-                filteredOrderData = findDrug
-              } else {
+            if (findDrug == null) return@launch
+
+            when (findDrug.size) {
+              0 -> {
+                isCheckingLoading = false
+              }
+
+              1 -> {
                 val labelData =
                   dispenseViewModel.handleGetLabel(findDrug[0].f_referenceCode, scannedCode)
                 if (labelData != null) {
@@ -293,9 +306,14 @@ fun DispenseScreen(
                   openDialog = true
                 } else {
                   isCheckingLoading = false
-                  retryBarcode = scannedCode
+                  retryBarcode = scannedCodeText
                   showRetryGetLabelDialog = true
                 }
+              }
+
+              else -> {
+                showSelectDrugDialog = true
+                filteredOrderData = findDrug
               }
             }
           } else {

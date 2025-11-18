@@ -7,5 +7,6 @@ data class UpdateInfo(
   val apk_url: String,
   val changelog: String,
   val created_at: String,
-  val updated_at: String
+  val updated_at: String,
+  val checksum: String
 )
