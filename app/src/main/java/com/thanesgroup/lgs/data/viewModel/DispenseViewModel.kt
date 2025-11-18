@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.thanesgroup.lgs.data.model.DispenseModel
+import com.thanesgroup.lgs.data.model.DispenseOnModel
 import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.repositories.SettingsRepository
@@ -28,6 +29,8 @@ class DispenseViewModel(
   private val context: Context
 ) : AndroidViewModel(application) {
   var dispenseData by mutableStateOf<DispenseModel?>(null)
+  var dispenseOnData by mutableStateOf<DispenseOnModel?>(null)
+  var dispenseOffData by mutableStateOf<DispenseOnModel?>(null)
 
   var isLoading by mutableStateOf(false)
     private set
@@ -73,6 +76,76 @@ class DispenseViewModel(
         val exceptionMessage = parseExceptionMessage(e)
         errorMessage = exceptionMessage
         settingsRepository.clearHn()
+      } finally {
+        isLoading = false
+      }
+    }
+  }
+
+  fun handleDispenseOnManual(scannedCode: String) {
+    if (scannedCode.isBlank()) return
+    isLoading = true
+
+    viewModelScope.launch {
+      try {
+        val response = ApiRepository.dispenseOnManual(scannedCode)
+
+        if (response.isSuccessful) {
+          val data = response.body()?.data
+          if (data != null) {
+            dispenseOnData = data
+          }
+        } else {
+          val errorJson = response.errorBody()?.string()
+          val errorApiMessage = parseErrorMessage(response.code(), errorJson)
+          errorMessage = errorApiMessage
+
+          if (response.code() == 401) {
+            handleUnauthorizedError(response.code(), context, authViewModel, navController)
+          }
+        }
+      } catch (e: Exception) {
+        if (e is retrofit2.HttpException && e.code() == 401) {
+          handleUnauthorizedError(e.code(), context, authViewModel, navController)
+        }
+
+        val exceptionMessage = parseExceptionMessage(e)
+        errorMessage = exceptionMessage
+      } finally {
+        isLoading = false
+      }
+    }
+  }
+
+  fun handleDispenseOffManual(scannedCode: String) {
+    if (scannedCode.isBlank()) return
+    isLoading = true
+
+    viewModelScope.launch {
+      try {
+        val response = ApiRepository.dispenseOffManual(scannedCode)
+
+        if (response.isSuccessful) {
+          val data = response.body()?.data
+          if (data != null) {
+            dispenseOffData = data
+          }
+        } else {
+          val errorJson = response.errorBody()?.string()
+          val errorApiMessage = parseErrorMessage(response.code(), errorJson)
+          errorMessage = errorApiMessage
+
+          if (response.code() == 401) {
+            handleUnauthorizedError(response.code(), context, authViewModel, navController)
+          }
+        }
+      } catch (e: Exception) {
+        if (e is retrofit2.HttpException && e.code() == 401) {
+          handleUnauthorizedError(e.code(), context, authViewModel, navController)
+        }
+
+        val exceptionMessage = parseExceptionMessage(e)
+        errorMessage = exceptionMessage
       } finally {
         isLoading = false
       }

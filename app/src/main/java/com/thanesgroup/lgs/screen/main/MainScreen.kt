@@ -1,6 +1,7 @@
 package com.thanesgroup.lgs.screen.main
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -15,6 +16,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +39,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.AuthViewModel
+import com.thanesgroup.lgs.data.viewModel.DataStoreViewModel
 import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
 import com.thanesgroup.lgs.data.viewModel.UpdateState
 import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
@@ -46,6 +49,7 @@ import com.thanesgroup.lgs.navigation.MENU_GRAPH_ROUTE
 import com.thanesgroup.lgs.navigation.MenuSubRoutes
 import com.thanesgroup.lgs.screen.appUpdate.AppUpdateScreen
 import com.thanesgroup.lgs.screen.dispense.DispenseScreen
+import com.thanesgroup.lgs.screen.dispense.DispenseTurnOnOffLight
 import com.thanesgroup.lgs.screen.menu.MenuScreen
 import com.thanesgroup.lgs.ui.component.menu.BadgedIcon
 import com.thanesgroup.lgs.ui.theme.LgsBlue
@@ -57,12 +61,14 @@ fun MainScreen(
   authViewModel: AuthViewModel,
   updateViewModel: UpdateViewModel,
   dispenseViewModel: DispenseViewModel,
+  dataStoreViewModel: DataStoreViewModel,
   context: Context
 ) {
   val navController = rememberNavController()
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navBackStackEntry?.destination
   val updateState by updateViewModel.updateState.collectAsState()
+  val checked by dataStoreViewModel.getDispenseMode.collectAsState(initial = false)
   var hasAcknowledgedUpdate by remember { mutableStateOf(false) }
 
   val transitionSpec: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
@@ -170,13 +176,21 @@ fun MainScreen(
         route = DISPENSE_GRAPH_ROUTE
       ) {
         composable(route = BottomNavDestination.DISPENSE.startDestinationRoute) {
-          DispenseScreen(
-            contentPadding = innerPadding,
-            dispenseViewModel = dispenseViewModel,
-            authState = authState,
-            updateViewModel = updateViewModel,
-            context = context
-          )
+          if (!checked) {
+            DispenseScreen(
+              contentPadding = innerPadding,
+              dispenseViewModel = dispenseViewModel,
+              authState = authState,
+              updateViewModel = updateViewModel,
+              context = context
+            )
+          } else {
+            DispenseTurnOnOffLight(
+              contentPadding = innerPadding,
+              dispenseViewModel = dispenseViewModel,
+              context = context
+            )
+          }
         }
       }
 
@@ -192,7 +206,8 @@ fun MainScreen(
             authViewModel = authViewModel,
             authState = authState,
             updateState = updateState,
-            dispenseViewModel = dispenseViewModel
+            dispenseViewModel = dispenseViewModel,
+            dataStoreViewModel = dataStoreViewModel
           )
         }
         composable(route = MenuSubRoutes.AppUpdate.route) {

@@ -34,3 +34,9 @@ data class OrderModel(
   val f_dispensestatus: String,
   val f_patientname: String
 )
+
+data class DispenseOnModel(
+  val drugCode: String,
+  val drugName: String,
+  val location: String
+)

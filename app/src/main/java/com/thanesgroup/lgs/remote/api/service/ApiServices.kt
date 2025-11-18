@@ -4,9 +4,12 @@ import com.thanesgroup.lgs.data.model.ApiResponse
 import com.thanesgroup.lgs.data.model.CheckDrugModel
 import com.thanesgroup.lgs.data.model.CheckUserModel
 import com.thanesgroup.lgs.data.model.DispenseModel
+import com.thanesgroup.lgs.data.model.DispenseOnModel
 import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.model.LoginRequest
 import com.thanesgroup.lgs.data.model.LogoutRequest
+import com.thanesgroup.lgs.data.model.ManualDispenseOffRequest
+import com.thanesgroup.lgs.data.model.ManualDispenseOnRequest
 import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.ReceiveOrderModel
 import com.thanesgroup.lgs.data.model.ReceiveOrderRequest
@@ -39,6 +42,12 @@ interface ApiService {
 
   @GET("prescription/order/{hn}")
   suspend fun dispense(@Path("hn") hn: String): Response<ApiResponse<DispenseModel>>
+
+  @POST("prescription/manual-on")
+  suspend fun dispenseOn(@Body request: ManualDispenseOnRequest): Response<ApiResponse<DispenseOnModel>>
+
+  @POST("prescription/manual-off")
+  suspend fun dispenseOff(@Body request: ManualDispenseOffRequest): Response<ApiResponse<DispenseOnModel>>
 
   @DELETE("prescription/dispense/{hn}")
   suspend fun pauseDispense(@Path("hn") hn: String): Response<ApiResponse<DispenseModel>>

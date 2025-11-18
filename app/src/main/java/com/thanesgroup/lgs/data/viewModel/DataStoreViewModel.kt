@@ -20,15 +20,15 @@ class DataStoreViewModel(
       initialValue = "Loading..."
     )
 
-  fun saveHn(hn: String) {
-    viewModelScope.launch {
-      settingsRepository.saveHn(hn)
-    }
-  }
+  val getDispenseMode = settingsRepository.dispenseMode.stateIn(
+    viewModelScope,
+    SharingStarted.Eagerly,
+    false
+  )
 
-  fun clearHn() {
+  fun saveDispenseMode(dispenseMode: Boolean) {
     viewModelScope.launch {
-      settingsRepository.clearHn()
+      settingsRepository.saveDispenseMode(dispenseMode)
     }
   }
 }

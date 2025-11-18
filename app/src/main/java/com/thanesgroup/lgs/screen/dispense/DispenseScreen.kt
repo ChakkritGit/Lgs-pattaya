@@ -355,7 +355,6 @@ fun DispenseScreen(
       .fillMaxSize()
       .pullRefresh(pullRefreshState)
   ) {
-
     if (dispenseViewModel.isLoading && dispenseViewModel.dispenseData == null) {
       Box(
         modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center

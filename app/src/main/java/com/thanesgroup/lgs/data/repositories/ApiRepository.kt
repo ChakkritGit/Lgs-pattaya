@@ -4,9 +4,12 @@ import com.thanesgroup.lgs.data.model.ApiResponse
 import com.thanesgroup.lgs.data.model.CheckDrugModel
 import com.thanesgroup.lgs.data.model.CheckUserModel
 import com.thanesgroup.lgs.data.model.DispenseModel
+import com.thanesgroup.lgs.data.model.DispenseOnModel
 import com.thanesgroup.lgs.data.model.LabelModel
 import com.thanesgroup.lgs.data.model.LoginRequest
 import com.thanesgroup.lgs.data.model.LogoutRequest
+import com.thanesgroup.lgs.data.model.ManualDispenseOffRequest
+import com.thanesgroup.lgs.data.model.ManualDispenseOnRequest
 import com.thanesgroup.lgs.data.model.QrLoginRequest
 import com.thanesgroup.lgs.data.model.ReceiveOrderModel
 import com.thanesgroup.lgs.data.model.ReceiveOrderRequest
@@ -40,6 +43,16 @@ object ApiRepository {
 
   suspend fun dispense(hn: String): Response<ApiResponse<DispenseModel>> {
     return RetrofitInstance.createApiWithAuth().dispense(hn)
+  }
+
+  suspend fun dispenseOnManual(scannedCode: String): Response<ApiResponse<DispenseOnModel>> {
+    val manualDispenseOnRequest = ManualDispenseOnRequest(scannedCode)
+    return RetrofitInstance.createApiWithAuth().dispenseOn(manualDispenseOnRequest)
+  }
+
+  suspend fun dispenseOffManual(scannedCode: String): Response<ApiResponse<DispenseOnModel>> {
+    val manualDispenseOffRequest = ManualDispenseOffRequest(scannedCode)
+    return RetrofitInstance.createApiWithAuth().dispenseOff(manualDispenseOffRequest)
   }
 
   suspend fun pauseDispense(hn: String): Response<ApiResponse<DispenseModel>> {

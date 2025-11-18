@@ -36,6 +36,7 @@ import com.thanesgroup.lgs.data.viewModel.DispenseViewModelFactory
 import com.thanesgroup.lgs.data.viewModel.UpdateViewModel
 import com.thanesgroup.lgs.screen.auth.LoginScreen
 import com.thanesgroup.lgs.screen.auth.LoginWithCodeScreen
+import com.thanesgroup.lgs.screen.dispense.DispenseTurnOnOffLight
 import com.thanesgroup.lgs.screen.main.MainScreen
 import com.thanesgroup.lgs.screen.splashScreen.SplashScreen
 import com.thanesgroup.lgs.util.handleUnauthorizedError
@@ -205,7 +206,8 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
         authState = authState,
         mainNavController = navController,
         updateViewModel = updateViewModel,
-        dispenseViewModel = dispenseViewModel
+        dispenseViewModel = dispenseViewModel,
+        dataStoreViewModel = dataStoreViewModel
       )
     }
   }

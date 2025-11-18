@@ -3,6 +3,7 @@ package com.thanesgroup.lgs.data.repositories
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -28,13 +29,17 @@ class SettingsRepository(private val context: Context) {
 
   private object PreferencesKeys {
     val HN = stringPreferencesKey("hn")
-    val SECOND_USER = stringPreferencesKey("second_user")
+    val DISPENSEMODE = booleanPreferencesKey("dispense_mode")
     val ORDER_LABEL = stringPreferencesKey("order_label")
   }
 
   val hn: Flow<String> = context.dataStore.data.map { preferences ->
       preferences[PreferencesKeys.HN] ?: ""
     }
+
+  val dispenseMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
+    preferences[PreferencesKeys.DISPENSEMODE] ?: false
+  }
 
   val orderLabelFlow: Flow<String?> =
     context.dataStore.data.map { pref -> pref[PreferencesKeys.ORDER_LABEL] }
@@ -45,9 +50,9 @@ class SettingsRepository(private val context: Context) {
     }
   }
 
-  suspend fun saveSecondUser(name: String) {
+  suspend fun saveDispenseMode(dispenseMode: Boolean) {
     context.dataStore.edit { settings ->
-      settings[PreferencesKeys.SECOND_USER] = name
+      settings[PreferencesKeys.DISPENSEMODE] = dispenseMode
     }
   }
 
