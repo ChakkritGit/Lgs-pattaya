@@ -50,7 +50,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.google.gson.Gson
 import com.thanesgroup.lgs.R
+import com.thanesgroup.lgs.data.model.OrderModel
 import com.thanesgroup.lgs.data.model.TokenDecodeModel
 import com.thanesgroup.lgs.data.viewModel.AuthState
 import com.thanesgroup.lgs.data.viewModel.DataStoreViewModel
@@ -284,6 +286,38 @@ fun DispenseTurnOnOffLight(
                   maxLines = 2,
                   overflow = TextOverflow.Ellipsis
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                  onClick = {
+                    scope.launch {
+                      val result =
+                        dispenseViewModel.handleDispenseOffManual(scannedCode = dispenseViewModel.dispenseOnData?.location!!)
+
+                      if (result == null) {
+                        retryBarcode = dispenseViewModel.dispenseOnData?.location!!
+                        showRetryReceiveDialog = true
+
+                        return@launch
+                      }
+
+                      dataStoreViewModel.saveDispenseDrugCode(null)
+
+                      retryBarcode = ""
+                    }
+                  },
+                  colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
+                  shape = CircleShape,
+                  modifier = Modifier.fillMaxWidth()
+                ) {
+                  Text(
+                    text = "รับยา",
+                    fontFamily = anuphanFamily,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White
+                  )
+                }
               }
             }
           }
