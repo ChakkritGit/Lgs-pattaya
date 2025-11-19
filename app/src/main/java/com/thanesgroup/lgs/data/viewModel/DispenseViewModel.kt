@@ -82,6 +82,7 @@ class DispenseViewModel(
   }
 
   suspend fun handleDispenseOnManual(scannedCode: String): DispenseOnModel? {
+    isLoading = true
     return try {
       val response = ApiRepository.dispenseOnManual(scannedCode)
 
@@ -104,10 +105,13 @@ class DispenseViewModel(
 
       errorMessage = parseExceptionMessage(e)
       null
+    } finally {
+      isLoading = false
     }
   }
 
   suspend fun handleDispenseOffManual(scannedCode: String): DispenseOnModel? {
+    isLoading = true
     return try {
       val response = ApiRepository.dispenseOffManual(scannedCode)
 
@@ -130,6 +134,8 @@ class DispenseViewModel(
 
       errorMessage = parseExceptionMessage(e)
       null
+    } finally {
+      isLoading = false
     }
   }
 

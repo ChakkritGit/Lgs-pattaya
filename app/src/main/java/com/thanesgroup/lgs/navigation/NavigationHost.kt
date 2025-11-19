@@ -57,7 +57,6 @@ fun AppNavigation(innerPadding: PaddingValues, navController: NavHostController,
   val dataStoreViewModel: DataStoreViewModel = viewModel(
     factory = DataStoreViewModelFactory(SettingsRepository.getInstance(context))
   )
-
   val dispenseViewModel: DispenseViewModel = viewModel(
     factory = DispenseViewModelFactory(
       settingsRepository = SettingsRepository.getInstance(context),

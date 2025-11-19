@@ -188,6 +188,8 @@ fun MainScreen(
             DispenseTurnOnOffLight(
               contentPadding = innerPadding,
               dispenseViewModel = dispenseViewModel,
+              dataStoreViewModel = dataStoreViewModel,
+              authState = authState,
               context = context
             )
           }

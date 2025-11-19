@@ -3,6 +3,7 @@ package com.thanesgroup.lgs.data.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.thanesgroup.lgs.data.model.DispenseOnModel
 import com.thanesgroup.lgs.data.repositories.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,9 +27,17 @@ class DataStoreViewModel(
     false
   )
 
+  val getDispenseDrugCodeData = settingsRepository.dispenseDrugCodeData
+
   fun saveDispenseMode(dispenseMode: Boolean) {
     viewModelScope.launch {
       settingsRepository.saveDispenseMode(dispenseMode)
+    }
+  }
+
+  fun saveDispenseDrugCode(dispenseData: DispenseOnModel?) {
+    viewModelScope.launch {
+      settingsRepository.saveDispenseDrugCode(dispenseData)
     }
   }
 }

@@ -1,8 +1,11 @@
 package com.thanesgroup.lgs.screen.dispense
 
+import android.app.Activity
 import android.content.Context
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,21 +51,39 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.thanesgroup.lgs.R
+import com.thanesgroup.lgs.data.model.TokenDecodeModel
+import com.thanesgroup.lgs.data.viewModel.AuthState
+import com.thanesgroup.lgs.data.viewModel.DataStoreViewModel
 import com.thanesgroup.lgs.data.viewModel.DispenseViewModel
 import com.thanesgroup.lgs.ui.component.BarcodeScanner
 import com.thanesgroup.lgs.ui.theme.LgsBlue
+import com.thanesgroup.lgs.ui.theme.LightBlue
+import com.thanesgroup.lgs.ui.theme.LightGreen
+import com.thanesgroup.lgs.ui.theme.LightRed
+import com.thanesgroup.lgs.ui.theme.LightYellow
 import com.thanesgroup.lgs.ui.theme.anuphanFamily
+import com.thanesgroup.lgs.util.jwtDecode
+import com.thanesgroup.lgs.util.updateStatusBarColor
 import kotlinx.coroutines.launch
 
 @Composable
 fun DispenseTurnOnOffLight(
-  contentPadding: PaddingValues, dispenseViewModel: DispenseViewModel, context: Context
+  contentPadding: PaddingValues,
+  dispenseViewModel: DispenseViewModel,
+  dataStoreViewModel: DataStoreViewModel,
+  authState: AuthState,
+  context: Context
 ) {
   val scope = rememberCoroutineScope()
+  val activity = LocalActivity.current as Activity
   var retryBarcode by remember { mutableStateOf("") }
   var showRetryGetLabelDialog by remember { mutableStateOf(false) }
   var showRetryReceiveDialog by remember { mutableStateOf(false) }
   var isRetryGetLabelLoading by remember { mutableStateOf(false) }
+
+  val payload = jwtDecode<TokenDecodeModel>(authState.token)
+  val dispenseDrugCodeData by dataStoreViewModel.getDispenseDrugCodeData.collectAsState(null)
+  val defaultColor = MaterialTheme.colorScheme.background
 
   BarcodeScanner { scannedCode ->
     if (dispenseViewModel.dispenseOnData == null) {
@@ -74,6 +96,8 @@ fun DispenseTurnOnOffLight(
 
           return@launch
         }
+
+        dataStoreViewModel.saveDispenseDrugCode(result)
 
         retryBarcode = ""
       }
@@ -90,11 +114,34 @@ fun DispenseTurnOnOffLight(
             return@launch
           }
 
+          dataStoreViewModel.saveDispenseDrugCode(null)
+
           retryBarcode = ""
         }
       } else {
         dispenseViewModel.errorMessage = "BinLo ไม่ถูกต้อง"
       }
+    }
+  }
+
+  LaunchedEffect(payload, dispenseViewModel.dispenseOnData) {
+    if (payload != null && dispenseViewModel.dispenseOnData != null) {
+      val color = when (payload.color) {
+        "1" -> LightRed
+        "2" -> LightGreen
+        "3" -> LightBlue
+        else -> LightYellow
+      }
+
+      updateStatusBarColor(activity, color)
+    } else {
+      updateStatusBarColor(activity, defaultColor)
+    }
+  }
+
+  LaunchedEffect(dispenseDrugCodeData) {
+    if (dispenseDrugCodeData != null) {
+      dispenseViewModel.dispenseOnData = dispenseDrugCodeData
     }
   }
 
@@ -111,7 +158,21 @@ fun DispenseTurnOnOffLight(
     Box(
       modifier = Modifier
         .fillMaxSize()
-        .padding(horizontal = 16.dp),
+        .background(
+          if (payload != null && dispenseViewModel.dispenseOnData != null) {
+            if (payload.color == "1") {
+              LightRed
+            } else if (payload.color == "2") {
+              LightGreen
+            } else if (payload.color == "3") {
+              LightBlue
+            } else {
+              LightYellow
+            }
+          } else {
+            MaterialTheme.colorScheme.background
+          }
+        ),
       contentAlignment = Alignment.Center
     ) {
       if (dispenseViewModel.isLoading) {
@@ -120,67 +181,111 @@ fun DispenseTurnOnOffLight(
         )
       } else {
         if (dispenseViewModel.dispenseOnData != null) {
-          Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
           ) {
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.Center,
-              modifier = Modifier.fillMaxWidth()
+            Column(
+              modifier = Modifier
+                .fillMaxWidth(),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.Center
             ) {
-              Icon(
-                painter = painterResource(id = R.drawable.barcode_scanner_24px),
-                contentDescription = "Scan icon",
-                modifier = Modifier.size(24.dp)
-              )
-              Spacer(modifier = Modifier.width(8.dp))
               Text(
-                text = "Scan ช่องยาเพื่อยืนยันการจัดยา",
-                color = Color.Red,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-              )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row {
-              Text(
-                text = "BinLo : ",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-              )
-              Text(
-                text = dispenseViewModel.dispenseOnData?.location ?: "",
-                style = MaterialTheme.typography.titleLarge,
+                text = if (payload != null) {
+                  if (payload.color == "1") {
+                    "ตำแหน่งไฟสีแดง"
+                  } else if (payload.color == "2") {
+                    "ตำแหน่งไฟสีเขียว"
+                  } else if (payload.color == "3") {
+                    "ตำแหน่งไฟสีน้ำเงิน"
+                  } else {
+                    "ตำแหน่งไฟสีเหลือง"
+                  }
+                } else {
+                  "ไม่พบสี"
+                },
                 fontWeight = FontWeight.Bold,
-                color = Color.Red
+                color = if (payload != null) {
+                  Color.White
+                } else {
+                  MaterialTheme.colorScheme.onSurface
+                },
+                style = MaterialTheme.typography.titleLarge,
               )
+
+              Spacer(modifier = Modifier.height(12.dp))
+
+              Column(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+                  .clip(RoundedCornerShape(16.dp))
+                  .background(MaterialTheme.colorScheme.background)
+                  .padding(vertical = 14.dp, horizontal = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+              ) {
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.Center,
+                  modifier = Modifier.fillMaxWidth()
+                ) {
+                  Icon(
+                    painter = painterResource(id = R.drawable.barcode_scanner_24px),
+                    contentDescription = "Scan icon",
+                    modifier = Modifier.size(24.dp)
+                  )
+                  Spacer(modifier = Modifier.width(8.dp))
+                  Text(
+                    text = "Scan ช่องยาเพื่อยืนยันการจัดยา",
+                    color = Color.Red,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                  )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row {
+                  Text(
+                    text = "BinLo : ",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                  )
+                  Text(
+                    text = dispenseViewModel.dispenseOnData?.location ?: "",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Red
+                  )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                  text = dispenseViewModel.dispenseOnData?.drugCode ?: "ไม่พบชื่อยา",
+                  style = MaterialTheme.typography.titleSmall,
+                  fontWeight = FontWeight.Bold,
+                  color = MaterialTheme.colorScheme.onSurface,
+                  maxLines = 2,
+                  overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                  text = dispenseViewModel.dispenseOnData?.drugName ?: "ไม่พบชื่อยา",
+                  style = MaterialTheme.typography.titleSmall,
+                  fontWeight = FontWeight.Bold,
+                  color = MaterialTheme.colorScheme.onSurface,
+                  maxLines = 2,
+                  overflow = TextOverflow.Ellipsis
+                )
+              }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text (
-              text = dispenseViewModel.dispenseOnData?.drugCode ?: "ไม่พบชื่อยา",
-              style = MaterialTheme.typography.titleSmall,
-              fontWeight = FontWeight.Bold,
-              color = MaterialTheme.colorScheme.onSurface,
-              maxLines = 2,
-              overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-              text = dispenseViewModel.dispenseOnData?.drugName ?: "ไม่พบชื่อยา",
-              style = MaterialTheme.typography.titleSmall,
-              fontWeight = FontWeight.Bold,
-              color = MaterialTheme.colorScheme.onSurface,
-              maxLines = 2,
-              overflow = TextOverflow.Ellipsis
-            )
           }
         } else {
           Column(

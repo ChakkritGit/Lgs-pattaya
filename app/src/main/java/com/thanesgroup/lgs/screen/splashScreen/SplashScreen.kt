@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -35,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.thanesgroup.lgs.ui.theme.LgsBlue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.thanesgroup.lgs.R
 
 private enum class AnimationState {
   Showing, FadingOut, Typing, Done
@@ -162,6 +166,26 @@ fun SplashScreen(
           strokeWidth = 2.dp
         )
       }
+    }
+
+    Column(
+      modifier = Modifier
+        .align(Alignment.BottomCenter)
+        .padding(bottom = 48.dp),
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      Image(
+        painter = painterResource(id = R.drawable.from_thanes_development_co__ltd),
+        contentDescription = "from_thanes_development_co__ltd",
+        modifier = Modifier.height(72.dp),
+        contentScale = ContentScale.Fit
+      )
+//      Spacer(modifier = Modifier.height(8.dp))
+//      Text(
+//        text = "Powered by Your Company",
+//        fontSize = 12.sp,
+//        color = Color.Gray
+//      )
     }
   }
 }
