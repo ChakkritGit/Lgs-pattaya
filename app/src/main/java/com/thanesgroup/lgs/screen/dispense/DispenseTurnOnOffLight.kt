@@ -8,6 +8,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -296,16 +297,15 @@ fun DispenseTurnOnOffLight(
                       val result =
                         dispenseViewModel.handleDispenseOffManual(scannedCode = dispenseViewModel.dispenseOnData?.location!!)
 
-                      if (result == null) {
-                        retryBarcode = dispenseViewModel.dispenseOnData?.location!!
-                        showRetryReceiveDialog = true
+                      if (result.statusCode == 200) {
+                        dataStoreViewModel.saveDispenseDrugCode(null)
 
+                        retryBarcode = ""
                         return@launch
                       }
 
-                      dataStoreViewModel.saveDispenseDrugCode(null)
-
-                      retryBarcode = ""
+                      retryBarcode = dispenseViewModel.dispenseOnData?.location!!
+                      showRetryReceiveDialog = true
                     }
                   },
                   colors = ButtonDefaults.buttonColors(containerColor = LgsBlue),
@@ -387,7 +387,7 @@ fun DispenseTurnOnOffLight(
           .padding(horizontal = 32.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -485,7 +485,7 @@ fun DispenseTurnOnOffLight(
           .padding(horizontal = 32.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),

@@ -474,7 +474,7 @@ fun DispenseScreen(
           .padding(horizontal = 14.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -646,7 +646,7 @@ fun DispenseScreen(
           .padding(horizontal = 32.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -752,7 +752,7 @@ fun DispenseScreen(
           .fillMaxWidth(0.85f)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -868,7 +868,7 @@ fun DispenseScreen(
           .fillMaxWidth(0.85f)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -1016,7 +1016,7 @@ fun DispenseScreen(
           .height(100.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -1049,7 +1049,7 @@ fun DispenseScreen(
           .padding(horizontal = 32.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -1185,7 +1185,7 @@ fun DispenseScreen(
           .padding(horizontal = 32.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),

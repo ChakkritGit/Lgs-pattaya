@@ -201,7 +201,7 @@ fun MenuScreen(
           .padding(horizontal = 34.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -285,7 +285,7 @@ fun MenuScreen(
           .padding(horizontal = 56.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
@@ -386,7 +386,7 @@ fun MenuScreen(
           .padding(horizontal = 52.dp)
           .border(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+            color = MaterialTheme.colorScheme.onSurface,
             shape = RoundedCornerShape(34.dp)
           ),
         shape = RoundedCornerShape(34.dp),
