@@ -40,3 +40,9 @@ data class DispenseOnModel(
   val drugName: String,
   val location: String
 )
+
+data class ManualDispenseReturnModel(
+  val statusCode: Int,
+  val message: String,
+  val data: DispenseOnModel?
+)

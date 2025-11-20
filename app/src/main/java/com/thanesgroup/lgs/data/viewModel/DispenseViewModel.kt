@@ -11,9 +11,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import com.google.gson.Gson
 import com.thanesgroup.lgs.data.model.DispenseModel
 import com.thanesgroup.lgs.data.model.DispenseOnModel
 import com.thanesgroup.lgs.data.model.LabelModel
+import com.thanesgroup.lgs.data.model.ManualDispenseReturnModel
 import com.thanesgroup.lgs.data.repositories.ApiRepository
 import com.thanesgroup.lgs.data.repositories.SettingsRepository
 import com.thanesgroup.lgs.util.handleUnauthorizedError
@@ -81,59 +83,154 @@ class DispenseViewModel(
     }
   }
 
-  suspend fun handleDispenseOnManual(scannedCode: String): DispenseOnModel? {
+  suspend fun handleDispenseOnManual(scannedCode: String): ManualDispenseReturnModel {
     isLoading = true
+
     return try {
       val response = ApiRepository.dispenseOnManual(scannedCode)
 
       if (response.isSuccessful) {
-        dispenseOnData = response.body()?.data
-        response.body()?.data
+
+        val data = response.body()?.data
+        dispenseOnData = data
+
+        ManualDispenseReturnModel(
+          data = data,
+          message = response.body()?.message ?: "",
+          statusCode = 200
+        )
+
       } else {
         val errorJson = response.errorBody()?.string()
-        errorMessage = parseErrorMessage(response.code(), errorJson)
+        val parsedError = parseErrorMessage(response.code(), errorJson)
+        errorMessage = parsedError
 
-        if (response.code() == 401) {
-          handleUnauthorizedError(response.code(), context, authViewModel, navController)
+        when (response.code()) {
+
+          401 -> {
+            handleUnauthorizedError(
+              response.code(),
+              context,
+              authViewModel,
+              navController
+            )
+
+            ManualDispenseReturnModel(
+              data = null,
+              statusCode = 401,
+              message = parsedError
+            )
+          }
+
+          400 -> {
+            ManualDispenseReturnModel(
+              data = null,
+              statusCode = 400,
+              message = parsedError
+            )
+          }
+
+          else -> {
+            ManualDispenseReturnModel(
+              data = null,
+              statusCode = response.code(),
+              message = parsedError
+            )
+          }
         }
-        null
       }
+
     } catch (e: Exception) {
+
       if (e is retrofit2.HttpException && e.code() == 401) {
         handleUnauthorizedError(e.code(), context, authViewModel, navController)
       }
 
       errorMessage = parseExceptionMessage(e)
-      null
+
+      ManualDispenseReturnModel(
+        data = null,
+        statusCode = 500,
+        message = e.message ?: "Unexpected error"
+      )
+
     } finally {
       isLoading = false
     }
   }
 
-  suspend fun handleDispenseOffManual(scannedCode: String): DispenseOnModel? {
+  suspend fun handleDispenseOffManual(scannedCode: String): ManualDispenseReturnModel {
     isLoading = true
+
     return try {
       val response = ApiRepository.dispenseOffManual(scannedCode)
 
       if (response.isSuccessful) {
+
         dispenseOnData = null
-        response.body()?.data
+
+        val data = response.body()?.data
+
+        ManualDispenseReturnModel(
+          data = data,
+          message = response.body()?.message ?: "",
+          statusCode = 200
+        )
+
       } else {
         val errorJson = response.errorBody()?.string()
-        errorMessage = parseErrorMessage(response.code(), errorJson)
+        val parsedError = parseErrorMessage(response.code(), errorJson)
+        errorMessage = parsedError
 
-        if (response.code() == 401) {
-          handleUnauthorizedError(response.code(), context, authViewModel, navController)
+        when (response.code()) {
+
+          401 -> {
+            handleUnauthorizedError(
+              response.code(),
+              context,
+              authViewModel,
+              navController
+            )
+
+            ManualDispenseReturnModel(
+              data = null,
+              statusCode = 401,
+              message = parsedError
+            )
+          }
+
+          400 -> {
+            ManualDispenseReturnModel(
+              data = null,
+              statusCode = 400,
+              message = parsedError
+            )
+          }
+
+          else -> {
+            ManualDispenseReturnModel(
+              data = null,
+              statusCode = response.code(),
+              message = parsedError
+            )
+          }
         }
-        null
       }
+
     } catch (e: Exception) {
+
       if (e is retrofit2.HttpException && e.code() == 401) {
         handleUnauthorizedError(e.code(), context, authViewModel, navController)
       }
 
       errorMessage = parseExceptionMessage(e)
-      null
+
+      ManualDispenseReturnModel(
+        data = null,
+        statusCode = 500,
+        message = e.message ?: "Unexpected error"
+      )
+
     } finally {
       isLoading = false
     }

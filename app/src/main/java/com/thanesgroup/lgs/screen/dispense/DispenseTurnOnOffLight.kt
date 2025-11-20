@@ -2,6 +2,7 @@ package com.thanesgroup.lgs.screen.dispense
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.BorderStroke
@@ -92,14 +93,14 @@ fun DispenseTurnOnOffLight(
       scope.launch {
         val result = dispenseViewModel.handleDispenseOnManual(scannedCode = scannedCode)
 
-        if (result == null) {
+        if (result.statusCode == 400) {
           retryBarcode = scannedCode
           showRetryGetLabelDialog = true
 
           return@launch
         }
 
-        dataStoreViewModel.saveDispenseDrugCode(result)
+        dataStoreViewModel.saveDispenseDrugCode(result.data)
 
         retryBarcode = ""
       }
@@ -109,7 +110,7 @@ fun DispenseTurnOnOffLight(
           val result =
             dispenseViewModel.handleDispenseOffManual(scannedCode = dispenseViewModel.dispenseOnData?.location!!)
 
-          if (result == null) {
+          if (result.statusCode == 400) {
             retryBarcode = scannedCode
             showRetryReceiveDialog = true
 
@@ -439,15 +440,12 @@ fun DispenseTurnOnOffLight(
 
                   val labelData = dispenseViewModel.handleDispenseOnManual(retryBarcode)
 
-                  if (labelData == null) {
-                    dispenseViewModel.errorMessage = "จัดยาล้มเหลว"
-
+                  if (labelData.statusCode == 200) {
+                    retryBarcode = ""
+                    showRetryGetLabelDialog = false
                     isRetryGetLabelLoading = false
-                    return@launch
                   }
 
-                  retryBarcode = ""
-                  showRetryGetLabelDialog = false
                   isRetryGetLabelLoading = false
                 }
               },
@@ -540,15 +538,12 @@ fun DispenseTurnOnOffLight(
 
                   val labelData = dispenseViewModel.handleDispenseOffManual(retryBarcode)
 
-                  if (labelData == null) {
-                    dispenseViewModel.errorMessage = "รับยาล้มเหลว"
-
+                  if (labelData.statusCode == 200) {
+                    retryBarcode = ""
+                    showRetryReceiveDialog = false
                     isRetryGetLabelLoading = false
-                    return@launch
                   }
 
-                  retryBarcode = ""
-                  showRetryReceiveDialog = false
                   isRetryGetLabelLoading = false
                 }
               },
